@@ -81,8 +81,20 @@ document.addEventListener('DOMContentLoaded', function(){
                         end: s.end,
                         display: 'background',
                         color: s.status === 'free' ? '#34d399' : '#f87171',
+                        extendedProps: { slotId: s.id, status: s.status }
                     };
                     out.push(bg);
+                    // if on dashboard (analyst), add an interactive event on top to allow occupy/release
+                    if(document.getElementById('addSlotBtn')){
+                        out.push({
+                            id: 'slot-ui-' + s.id,
+                            start: s.start,
+                            end: s.end,
+                            title: s.status === 'free' ? 'Livre' : 'Ocupado',
+                            color: s.status === 'free' ? '#059669' : '#dc2626',
+                            extendedProps: { slotId: s.id, status: s.status }
+                        });
+                    }
                 }
                 successCallback(out);
             }).catch(err => failureCallback(err));
@@ -93,6 +105,27 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
     calendar.render();
+    // allow clicking interactive slot events to toggle status (dashboard only)
+    if(document.getElementById('addSlotBtn')){
+        calendar.setOption('eventClick', function(info){
+            const props = info.event.extendedProps || {};
+            const slotId = props.slotId;
+            if(!slotId) return;
+            const current = props.status;
+            const next = current === 'free' ? 'occupied' : 'free';
+            const verb = next === 'occupied' ? 'ocupar' : 'liberar';
+            if(!confirm(`Deseja ${verb} este horário?`)) return;
+            fetch('/slots/' + slotId, {
+                method: 'PATCH',
+                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                body: JSON.stringify({ status: next })
+            }).then(async r => {
+                if(!r.ok){ alert('Erro ao atualizar slot'); return }
+                await r.json();
+                calendar.refetchEvents();
+            }).catch(err => { alert('Erro de rede'); });
+        });
+    }
     // Modal submit handler
     const bookingForm = document.getElementById('booking_form');
     if(bookingForm){
