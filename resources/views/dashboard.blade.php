@@ -48,6 +48,32 @@
                 <div class="col-span-2 bg-white shadow sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4">Agenda (calendário)</h3>
                     <div id="calendar"></div>
+
+                    <!-- Booking Modal -->
+                    <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+                        <div class="bg-white rounded-lg w-full max-w-md p-6">
+                            <h3 class="text-lg font-semibold mb-2">Solicitar sessão</h3>
+                            <div id="booking_error" class="text-red-600 mb-2"></div>
+                            <form id="booking_form">
+                                <div class="mb-3">
+                                    <label class="block text-sm">Nome</label>
+                                    <input id="booking_name" name="name" class="w-full border rounded p-2" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm">Telefone</label>
+                                    <input id="booking_phone" name="phone" class="w-full border rounded p-2" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm">Horário</label>
+                                    <input id="booking_scheduled_at" name="scheduled_at" type="datetime-local" class="w-full border rounded p-2" required>
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" id="booking_cancel" class="px-3 py-2 border rounded">Cancelar</button>
+                                    <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded">Confirmar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-white shadow sm:rounded-lg p-6">
