@@ -10,7 +10,16 @@ use App\Models\Agendamento;
 
 class Paciente extends Model
 {
-    protected $table = 'patients';
+    /**
+     * Dynamically set table to support both English and Portuguese schemas.
+     */
+    protected $table = null;
+
+    public function __construct(array $attributes = [])
+    {
+        parent::__construct($attributes);
+        $this->setTable(Schema::hasTable('pacientes') ? 'pacientes' : 'patients');
+    }
     protected $fillable = [
         'name',
         'email',
