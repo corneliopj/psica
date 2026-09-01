@@ -24,7 +24,9 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Horário (data e hora)</label>
-            <input id="public_scheduled_at" type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required class="mt-1 block w-full border rounded p-2">
+            <!-- keep the ISO input hidden for submission, show a localized text input for users -->
+            <input id="public_scheduled_at" type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" class="hidden">
+            <input id="public_scheduled_text" type="text" placeholder="DD/MM/YYYY HH:mm" class="mt-1 block w-full border rounded p-2" value="" required>
             <div id="public_scheduled_display" class="mt-2 text-sm text-gray-700"></div>
         </div>
         <script>
@@ -38,18 +40,48 @@
                     const mins = pad(d.getMinutes());
                     return `${day}/${month}/${year} ${hours}:${mins}`;
                 }
-                const input = document.getElementById('public_scheduled_at');
+                const isoInput = document.getElementById('public_scheduled_at');
+                const textInput = document.getElementById('public_scheduled_text');
                 const display = document.getElementById('public_scheduled_display');
-                function update(){
-                    if(!input.value){ display.innerText = '' ; return }
-                    const d = new Date(input.value);
-                    if(isNaN(d)) { display.innerText = input.value; return }
+
+                function parseBR(str){
+                    // expected DD/MM/YYYY HH:mm
+                    const m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})$/);
+                    if(!m) return null;
+                    const day = parseInt(m[1],10), month = parseInt(m[2],10)-1, year = parseInt(m[3],10);
+                    const hour = parseInt(m[4],10), minute = parseInt(m[5],10);
+                    const d = new Date(year, month, day, hour, minute);
+                    if(d.getFullYear()!==year || d.getMonth()!==month || d.getDate()!==day) return null;
+                    return d;
+                }
+
+                function toISOForInput(d){
+                    const tzOffset = d.getTimezoneOffset()*60000;
+                    const local = new Date(d.getTime() - tzOffset);
+                    return local.toISOString().slice(0,16);
+                }
+
+                function updateFromIso(){
+                    if(!isoInput.value){ display.innerText = ''; textInput.value = ''; return }
+                    const d = new Date(isoInput.value);
+                    if(isNaN(d)) { display.innerText = isoInput.value; textInput.value = ''; return }
+                    display.innerText = formatBR(d);
+                    textInput.value = formatBR(d);
+                }
+
+                function updateIsoFromText(){
+                    const txt = textInput.value.trim();
+                    const d = parseBR(txt);
+                    if(!d){ display.innerText = 'Formato inválido (use DD/MM/YYYY HH:mm)'; return }
+                    isoInput.value = toISOForInput(d);
                     display.innerText = formatBR(d);
                 }
-                input.addEventListener('change', update);
-                document.addEventListener('DOMContentLoaded', update);
-                // initial update if server provided an old value
-                update();
+
+                textInput.addEventListener('change', updateIsoFromText);
+                textInput.addEventListener('blur', updateIsoFromText);
+                document.addEventListener('DOMContentLoaded', updateFromIso);
+                // populate initial from server old value if any
+                updateFromIso();
             })();
         </script>
         <div>
