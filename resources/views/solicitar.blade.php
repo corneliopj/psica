@@ -24,8 +24,34 @@
         </div>
         <div>
             <label class="block text-sm font-medium text-gray-700">Horário (data e hora)</label>
-            <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required class="mt-1 block w-full border rounded p-2">
+            <input id="public_scheduled_at" type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}" required class="mt-1 block w-full border rounded p-2">
+            <div id="public_scheduled_display" class="mt-2 text-sm text-gray-700"></div>
         </div>
+        <script>
+            (function(){
+                function pad(n){ return n<10 ? '0'+n : ''+n }
+                function formatBR(d){
+                    const day = pad(d.getDate());
+                    const month = pad(d.getMonth()+1);
+                    const year = d.getFullYear();
+                    const hours = pad(d.getHours());
+                    const mins = pad(d.getMinutes());
+                    return `${day}/${month}/${year} ${hours}:${mins}`;
+                }
+                const input = document.getElementById('public_scheduled_at');
+                const display = document.getElementById('public_scheduled_display');
+                function update(){
+                    if(!input.value){ display.innerText = '' ; return }
+                    const d = new Date(input.value);
+                    if(isNaN(d)) { display.innerText = input.value; return }
+                    display.innerText = formatBR(d);
+                }
+                input.addEventListener('change', update);
+                document.addEventListener('DOMContentLoaded', update);
+                // initial update if server provided an old value
+                update();
+            })();
+        </script>
         <div>
             <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded">Solicitar sessão</button>
         </div>
