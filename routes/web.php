@@ -26,6 +26,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('pacientes', \App\Http\Controllers\PacienteController::class);
     Route::resource('prontuarios', \App\Http\Controllers\ProntuarioController::class);
     Route::resource('agendamentos', \App\Http\Controllers\AgendamentoController::class);
+    // Analyst slot management
+    Route::resource('slots', \App\Http\Controllers\SlotController::class)->except(['show']);
 });
+
+// Public API for slots (calendar)
+Route::get('/api/slots', [\App\Http\Controllers\SlotController::class, 'apiIndex'])->name('api.slots');
 
 require __DIR__.'/auth.php';

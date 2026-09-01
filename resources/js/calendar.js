@@ -64,25 +64,32 @@ document.addEventListener('DOMContentLoaded', function(){
             // focus name
             nameInput.focus();
         },
-        // fetch events and also create background "busy" events for visual blocking
+        // fetch agendamentos and slots and combine events
         events: function(fetchInfo, successCallback, failureCallback){
-            fetch('/api/agendamentos')
-                .then(r => r.json())
-                .then(js => {
-                    const out = [];
-                    for(const e of js){
-                        // assume backend provides start and end (or scheduled_at and duration)
-                        out.push(e);
-                        // create a background event to indicate occupied slot
-                        const bg = Object.assign({}, e);
-                        bg.id = 'busy-' + (e.id ?? Math.random().toString(36).slice(2,9));
-                        bg.display = 'background';
-                        bg.color = '#f87171';
-                        out.push(bg);
-                    }
-                    successCallback(out);
-                }).catch(err => failureCallback(err));
-        }
+            Promise.all([
+                fetch('/api/agendamentos').then(r => r.json()),
+                fetch('/api/slots').then(r => r.json())
+            ]).then(([agendamentos, slots]) => {
+                const out = [];
+                // push appointments
+                for(const e of agendamentos){ out.push(e); }
+                // push slots as background events: free=green, occupied=red
+                for(const s of slots){
+                    const bg = {
+                        id: 'slot-' + s.id,
+                        start: s.start,
+                        end: s.end,
+                        display: 'background',
+                        color: s.status === 'free' ? '#34d399' : '#f87171',
+                    };
+                    out.push(bg);
+                }
+                successCallback(out);
+            }).catch(err => failureCallback(err));
+        },
+        // limit visible hours to 14:00-21:00
+        slotMinTime: '14:00:00',
+        slotMaxTime: '21:00:00',
     });
 
     calendar.render();
@@ -140,6 +147,32 @@ document.addEventListener('DOMContentLoaded', function(){
                 if(display){ display.classList.add('hidden'); scheduledInputEl.classList.remove('hidden'); }
             }
             document.getElementById('bookingModal').classList.add('hidden');
+        });
+    }
+
+    // Slot modal handlers (analyst)
+    const addSlotBtn = document.getElementById('addSlotBtn');
+    const slotModal = document.getElementById('slotModal');
+    const slotForm = document.getElementById('slot_form');
+    if(addSlotBtn && slotModal){
+        addSlotBtn.addEventListener('click', function(){ slotModal.classList.remove('hidden'); });
+        document.getElementById('slot_cancel').addEventListener('click', function(){ slotModal.classList.add('hidden'); });
+    }
+    if(slotForm){
+        slotForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            const start = document.getElementById('slot_start').value;
+            const repeat_until = document.getElementById('slot_repeat_until').value || null;
+            fetch('/slots', {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                body: JSON.stringify({ start: start, repeat_weekly: repeat_until ? 1 : 0, repeat_until: repeat_until })
+            }).then(async r => {
+                if(!r.ok){ alert('Erro ao criar slot'); return }
+                // refresh calendar
+                calendar.refetchEvents();
+                slotModal.classList.add('hidden');
+            }).catch(err => { alert('Erro de rede'); });
         });
     }
 

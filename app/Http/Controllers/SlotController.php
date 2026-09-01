@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Slot;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class SlotController extends Controller
+{
+    public function index()
+    {
+        $slots = Slot::orderBy('start')->get();
+        return view('slots.index', compact('slots'));
+    }
+
+    public function store(Request $request)
+    {
+        $this->authorize('create', Slot::class);
+        $data = $request->validate([
+            'start' => 'required|date',
+            'end' => 'nullable|date',
+            'repeat_weekly' => 'nullable|boolean',
+            'repeat_until' => 'nullable|date',
+        ]);
+
+        $start = new \DateTime($data['start']);
+        $end = isset($data['end']) ? new \DateTime($data['end']) : (clone $start)->modify('+1 hour');
+
+        $created = [];
+        if(!empty($data['repeat_weekly']) && !empty($data['repeat_until'])){
+            $until = new \DateTime($data['repeat_until']);
+            $current = clone $start;
+            while($current <= $until){
+                $slot = Slot::create([
+                    'start' => $current->format('Y-m-d H:i:s'),
+                    'end' => $current->modify('+1 hour')->format('Y-m-d H:i:s'),
+                    'status' => 'free',
+                    'user_id' => Auth::id(),
+                    'recurrence_rule' => 'WEEKLY'
+                ]);
+                $created[] = $slot;
+                $current = (clone $current)->modify('+7 days');
+            }
+        } else {
+            $slot = Slot::create([
+                'start' => $start->format('Y-m-d H:i:s'),
+                'end' => $end->format('Y-m-d H:i:s'),
+                'status' => 'free',
+                'user_id' => Auth::id(),
+            ]);
+            $created[] = $slot;
+        }
+
+        if($request->wantsJson()){
+            return response()->json(['created' => $created]);
+        }
+
+        return back()->with('success', 'Slots criados');
+    }
+
+    public function update(Request $request, Slot $slot)
+    {
+        $this->authorize('update', $slot);
+        $data = $request->validate([
+            'status' => 'required|in:free,occupied'
+        ]);
+        $slot->update(['status' => $data['status']]);
+        if($request->wantsJson()) return response()->json(['slot' => $slot]);
+        return back();
+    }
+
+    public function destroy(Slot $slot)
+    {
+        $this->authorize('delete', $slot);
+        $slot->delete();
+        return back();
+    }
+
+    // Public API to list slots for calendar
+    public function apiIndex(Request $request)
+    {
+        $slots = Slot::all()->map(function($s){
+            return [
+                'id' => $s->id,
+                'start' => $s->start->toISOString(),
+                'end' => $s->end->toISOString(),
+                'status' => $s->status,
+            ];
+        });
+        return response()->json($slots);
+    }
+}

@@ -49,6 +49,10 @@
                     <h3 class="text-lg font-semibold mb-4">Agenda (calendário)</h3>
                     <div id="calendar"></div>
 
+                    <div class="mt-4 flex gap-2">
+                        <button id="addSlotBtn" class="px-3 py-2 bg-green-600 text-white rounded">Adicionar horário livre</button>
+                    </div>
+
                     <!-- Booking Modal -->
                     <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
                         <div class="bg-white rounded-lg w-full max-w-md p-6 relative z-50">
@@ -71,6 +75,27 @@
                                 <div class="flex justify-end gap-2">
                                     <button type="button" id="booking_cancel" class="px-3 py-2 border rounded">Cancelar</button>
                                     <button type="submit" class="px-3 py-2 bg-indigo-600 text-white rounded">Confirmar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Slot creation modal -->
+                    <div id="slotModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                        <div class="bg-white rounded-lg w-full max-w-md p-6 relative z-50">
+                            <h3 class="text-lg font-semibold mb-2">Criar horário livre</h3>
+                            <form id="slot_form">
+                                <div class="mb-3">
+                                    <label class="block text-sm">Início</label>
+                                    <input id="slot_start" type="datetime-local" class="w-full border rounded p-2" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-sm">Repetir semanalmente até</label>
+                                    <input id="slot_repeat_until" type="date" class="w-full border rounded p-2">
+                                </div>
+                                <div class="flex justify-end gap-2">
+                                    <button type="button" id="slot_cancel" class="px-3 py-2 border rounded">Cancelar</button>
+                                    <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded">Criar</button>
                                 </div>
                             </form>
                         </div>
