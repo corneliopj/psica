@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('prontuarios', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('patient_id')->constrained('patients')->onDelete('cascade');
+            $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             $table->string('title')->nullable();
             $table->text('content')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

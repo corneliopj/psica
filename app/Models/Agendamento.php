@@ -6,25 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Paciente;
-use App\Models\User;
 
-class Prontuario extends Model
+class Agendamento extends Model
 {
     protected $fillable = [
         'paciente_id',
-        'title',
-        'content',
-        'created_by',
+        'scheduled_at',
+        'duration_minutes',
+        'status',
+        'notes',
     ];
 
     public function paciente(): BelongsTo
     {
-        $fk = Schema::hasColumn('prontuarios', 'paciente_id') ? 'paciente_id' : 'patient_id';
+        $fk = Schema::hasColumn('agendamentos', 'paciente_id') ? 'paciente_id' : 'patient_id';
         return $this->belongsTo(Paciente::class, $fk);
-    }
-
-    public function creator(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
     }
 }

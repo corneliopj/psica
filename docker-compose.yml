@@ -1,13 +1,27 @@
 version: '3.8'
 services:
-  app:
+  php:
     image: php:8.2-fpm
-    container_name: psica_app
+    container_name: psica_php
     working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html
+      - ./:/var/www/html:cached
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+    networks:
+      - psica-net
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: psica_nginx
     ports:
-      - "9000:9000"
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+    networks:
+      - psica-net
 
   node:
     image: node:18
@@ -15,6 +29,32 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    command: ["npm", "run", "dev"]
+    command: ["/bin/sh", "-c", "npm install && npm run dev"]
+    networks:
+      - psica-net
 
-# Nota: o banco MariaDB remoto será usado diretamente; não está incluído aqui.
+  db:
+    image: mariadb:10.11
+    container_name: psica_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: psica
+      MYSQL_USER: psica
+      MYSQL_PASSWORD: psica
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    networks:
+      - psica-net
+
+volumes:
+  db_data:
+
+networks:
+  psica-net:
+    driver: bridge
+
+# Notes:
+# - The service `db` is optional; your .env currently points to a remote MariaDB.
+# - Nginx will serve the application at http://localhost:8080 when using the local DB.
