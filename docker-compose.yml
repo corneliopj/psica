@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  app:
+    image: php:8.2-fpm
+    container_name: psica_app
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "9000:9000"
+
+  node:
+    image: node:18
+    container_name: psica_node
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    command: ["npm", "run", "dev"]
+
+# Nota: o banco MariaDB remoto será usado diretamente; não está incluído aqui.
