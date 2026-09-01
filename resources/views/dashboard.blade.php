@@ -50,8 +50,8 @@
                     <div id="calendar"></div>
 
                     <!-- Booking Modal -->
-                    <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-                        <div class="bg-white rounded-lg w-full max-w-md p-6">
+                    <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+                        <div class="bg-white rounded-lg w-full max-w-md p-6 relative z-50">
                             <h3 class="text-lg font-semibold mb-2">Solicitar sessão</h3>
                             <div id="booking_error" class="text-red-600 mb-2"></div>
                             <form id="booking_form">
