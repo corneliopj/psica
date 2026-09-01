@@ -20,12 +20,26 @@ class Paciente extends Model
         parent::__construct($attributes);
         $this->setTable(Schema::hasTable('pacientes') ? 'pacientes' : 'patients');
     }
+
     protected $fillable = [
+        'usuario_id',
         'name',
+        'nome',
         'email',
         'phone',
+        'telefone',
+        'cpf',
         'birth_date',
+        'data_nascimento',
         'notes',
+        'contato_emergencia',
+        'status',
+    ];
+
+    protected $casts = [
+        'telefone' => 'encrypted',
+        'cpf' => 'encrypted',
+        'data_nascimento' => 'date',
     ];
 
     public function prontuarios(): HasMany

@@ -41,7 +41,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - `php artisan test` falha antes de iniciar por falta de `libcrypto.so.1.1`;
 - há um padrão de compatibilidade dual entre nomes em inglês e em português, que pode causar bugs em runtime;
 - o `ProntuarioController` usa `with('patient')` enquanto o relacionamento do modelo é `paciente`;
-- alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto.
+- alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
+- o ambiente de dados foi definido como MariaDB remoto em infraestrutura externa, o que exige configuração explícita do `.env` e revisão de conexão em todo o ambiente de execução.
 
 ---
 

@@ -11,10 +11,21 @@ use App\Models\User;
 class Prontuario extends Model
 {
     protected $fillable = [
+        'agendamento_id',
         'paciente_id',
+        'profissional_id',
         'title',
         'content',
+        'anotacoes',
+        'historico_clinico',
+        'data_registro',
         'created_by',
+    ];
+
+    protected $casts = [
+        'anotacoes' => 'encrypted',
+        'historico_clinico' => 'encrypted',
+        'data_registro' => 'datetime',
     ];
 
     public function paciente(): BelongsTo

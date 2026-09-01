@@ -71,7 +71,8 @@ Centralizar a gestão de agendamentos clínicos e o histórico de pacientes/pron
 
 - a base de código mantém compatibilidade com nomenclatura em inglês e em português, o que aumenta o risco de inconsistências em runtime;
 - o ambiente local atual falha ao rodar `php artisan test` porque o binário PHP instalado não consegue carregar a biblioteca OpenSSL 1.1.1 exigida;
-- a solução de slots e agendamentos depende de regras de conflito em timestamps e de compatibilidade com `DateTime` / `datetime-local` do navegador.
+- a solução de slots e agendamentos depende de regras de conflito em timestamps e de compatibilidade com `DateTime` / `datetime-local` do navegador;
+- o banco de dados do projeto será executado em ambiente remoto, de modo que a configuração `DB_HOST`, `DB_DATABASE`, `DB_USERNAME` e `DB_PASSWORD` deve ser tratada como ambiente externo e não local.
 
 ---
 
