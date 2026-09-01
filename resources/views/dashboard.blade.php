@@ -44,6 +44,29 @@
                     </div>
                 </a>
             </div>
+            <div class="mt-8 bg-white shadow sm:rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Próximos agendamentos</h3>
+                @php
+                    $upcoming = \App\Models\Agendamento::with('paciente')->where('scheduled_at', '>=', now())->orderBy('scheduled_at')->limit(10)->get();
+                @endphp
+                @if($upcoming->isEmpty())
+                    <div class="text-gray-500">Nenhum agendamento futuro.</div>
+                @else
+                    <ul class="space-y-3">
+                        @foreach($upcoming as $a)
+                            <li class="flex items-center justify-between border p-3 rounded">
+                                <div>
+                                    <div class="font-medium">{{ $a->paciente?->name ?? 'Paciente não identificado' }}</div>
+                                    <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($a->scheduled_at)->format('d/m/Y H:i') }}</div>
+                                </div>
+                                <div>
+                                    <a href="{{ route('pacientes.show', $a->paciente_id) }}" class="text-indigo-600">Ver paciente</a>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
+            </div>
 
         </div>
     </div>
