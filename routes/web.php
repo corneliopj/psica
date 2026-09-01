@@ -14,6 +14,9 @@ Route::get('/dashboard', function () {
 // Public routes for patient session requests (no auth required)
 Route::get('/solicitar', [\App\Http\Controllers\SolicitacaoController::class, 'create'])->name('solicitar.create');
 Route::post('/solicitar', [\App\Http\Controllers\SolicitacaoController::class, 'store'])->name('solicitar.store');
+// JSON endpoints used by calendar UI
+Route::get('/api/agendamentos', [\App\Http\Controllers\SolicitacaoController::class, 'events'])->name('api.agendamentos');
+Route::post('/api/solicitar', [\App\Http\Controllers\SolicitacaoController::class, 'apiStore'])->name('api.solicitar');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

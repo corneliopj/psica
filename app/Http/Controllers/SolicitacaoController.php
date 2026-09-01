@@ -49,4 +49,62 @@ class SolicitacaoController extends Controller
 
         return view('solicitar_success', ['agendamento' => $ag, 'paciente' => $paciente]);
     }
+
+    // Return JSON events for calendar
+    public function events(Request $request)
+    {
+        $from = $request->query('start');
+        $to = $request->query('end');
+
+        $query = Agendamento::with('paciente')->whereBetween('scheduled_at', [$from ?? now()->subMonth(), $to ?? now()->addMonth()])->get();
+
+        $events = $query->map(function($a){
+            return [
+                'id' => $a->id,
+                'title' => $a->paciente?->name ?? 'Paciente',
+                'start' => $a->scheduled_at,
+                'end' => \Carbon\Carbon::parse($a->scheduled_at)->addMinutes($a->duration_minutes)->toDateTimeString(),
+                'extendedProps' => [
+                    'paciente_id' => $a->paciente_id,
+                ],
+            ];
+        });
+
+        return response()->json($events);
+    }
+
+    // API store for calendar booking (AJAX)
+    public function apiStore(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string',
+            'phone' => 'required|string',
+            'scheduled_at' => 'required|date',
+        ]);
+
+        $phone = preg_replace('/[^0-9+]/', '', $data['phone']);
+        $paciente = Paciente::firstOrCreate(['phone' => $phone], ['name' => $data['name'], 'email' => null]);
+
+        $scheduled = \Carbon\Carbon::parse($data['scheduled_at']);
+
+        // Check overlap
+        $overlap = Agendamento::where(function($q) use ($scheduled){
+            $q->where('scheduled_at', '<', $scheduled->copy()->addHour())
+              ->whereRaw("datetime(scheduled_at, '+' || duration_minutes || ' minutes') > ?", [$scheduled->toDateTimeString()]);
+        })->exists();
+
+        if($overlap){
+            return response()->json(['error' => 'Horário ocupado'], 422);
+        }
+
+        $ag = Agendamento::create([
+            'paciente_id' => $paciente->id,
+            'scheduled_at' => $scheduled->toDateTimeString(),
+            'duration_minutes' => 60,
+            'status' => 'scheduled',
+            'notes' => 'Solicitação via calendar',
+        ]);
+
+        return response()->json(['success' => true, 'event' => $ag]);
+    }
 }
