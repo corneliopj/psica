@@ -11,6 +11,20 @@ document.addEventListener('DOMContentLoaded', function(){
         plugins: [ dayGridPlugin, timeGridPlugin, interactionPlugin ],
         initialView: 'timeGridWeek',
         selectable: true,
+        selectAllow: function(selectInfo) {
+            // prevent selecting if it overlaps any busy/background events
+            const start = selectInfo.start;
+            const end = selectInfo.end;
+            const events = calendar.getEvents();
+            for(const ev of events){
+                // only consider background/busy events
+                if(ev.display !== 'background') continue;
+                const evStart = ev.start;
+                const evEnd = ev.end || new Date(evStart.getTime() + 30*60000);
+                if(start < evEnd && end > evStart) return false;
+            }
+            return true;
+        },
         select: function(info){
             // open booking modal (replace prompts)
             const modal = document.getElementById('bookingModal');
@@ -33,7 +47,25 @@ document.addEventListener('DOMContentLoaded', function(){
             // focus name
             nameInput.focus();
         },
-        events: '/api/agendamentos'
+        // fetch events and also create background "busy" events for visual blocking
+        events: function(fetchInfo, successCallback, failureCallback){
+            fetch('/api/agendamentos')
+                .then(r => r.json())
+                .then(js => {
+                    const out = [];
+                    for(const e of js){
+                        // assume backend provides start and end (or scheduled_at and duration)
+                        out.push(e);
+                        // create a background event to indicate occupied slot
+                        const bg = Object.assign({}, e);
+                        bg.id = 'busy-' + (e.id ?? Math.random().toString(36).slice(2,9));
+                        bg.display = 'background';
+                        bg.color = '#f87171';
+                        out.push(bg);
+                    }
+                    successCallback(out);
+                }).catch(err => failureCallback(err));
+        }
     });
 
     calendar.render();
@@ -57,8 +89,10 @@ document.addEventListener('DOMContentLoaded', function(){
                     errorBox.innerText = js.error || (js.errors ? Object.values(js.errors).flat().join('. ') : 'Erro');
                     return;
                 }
-                // add event to calendar
-                calendar.addEvent({ id: js.event.id, title: name, start: js.event.scheduled_at });
+                // add event to calendar and add a background busy block
+                calendar.addEvent({ id: js.event.id, title: name, start: js.event.scheduled_at, end: js.event.ends_at ?? js.event.end });
+                const busyId = 'busy-' + js.event.id;
+                calendar.addEvent({ id: busyId, display: 'background', start: js.event.scheduled_at, end: js.event.ends_at ?? js.event.end, color: '#f87171' });
                 // close modal
                 document.getElementById('bookingModal').classList.add('hidden');
             }).catch(err => {
