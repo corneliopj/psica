@@ -1,7 +1,5 @@
-@extends('layouts.guest')
-
-@section('content')
-<div class="max-w-2xl mx-auto py-12">
+<x-guest-layout>
+    <div class="max-w-2xl mx-auto py-12">
     <h1 class="text-2xl font-bold mb-4">Solicitar sessão</h1>
 
     @if($errors->any())
@@ -32,5 +30,5 @@
             <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded">Solicitar sessão</button>
         </div>
     </form>
-</div>
-@endsection
+    </div>
+</x-guest-layout>
