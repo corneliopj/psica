@@ -40,6 +40,10 @@ document.addEventListener('DOMContentLoaded', function(){
             const dt = new Date(info.start);
             const localISO = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
             scheduledInput.value = localISO;
+            // mark scheduled input as fixed (opened from calendar) so user can't edit it
+            scheduledInput.readOnly = true;
+            scheduledInput.dataset.fixed = '1';
+            scheduledInput.classList.add('bg-gray-100', 'cursor-not-allowed');
             nameInput.value = '';
             phoneInput.value = '';
             errorBox.innerText = '';
@@ -94,7 +98,15 @@ document.addEventListener('DOMContentLoaded', function(){
                 const busyId = 'busy-' + js.event.id;
                 calendar.addEvent({ id: busyId, display: 'background', start: js.event.scheduled_at, end: js.event.ends_at ?? js.event.end, color: '#f87171' });
                 // close modal
-                document.getElementById('bookingModal').classList.add('hidden');
+                const modalEl = document.getElementById('bookingModal');
+                // if scheduled input was fixed, reset readonly state
+                const scheduledInputEl = document.getElementById('booking_scheduled_at');
+                if(scheduledInputEl && scheduledInputEl.dataset.fixed){
+                    scheduledInputEl.readOnly = false;
+                    delete scheduledInputEl.dataset.fixed;
+                    scheduledInputEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                }
+                modalEl.classList.add('hidden');
             }).catch(err => {
                 errorBox.innerText = 'Erro ao conectar';
             });
@@ -104,6 +116,12 @@ document.addEventListener('DOMContentLoaded', function(){
     const bookingCancel = document.getElementById('booking_cancel');
     if(bookingCancel){
         bookingCancel.addEventListener('click', function(){
+            const scheduledInputEl = document.getElementById('booking_scheduled_at');
+            if(scheduledInputEl && scheduledInputEl.dataset.fixed){
+                scheduledInputEl.readOnly = false;
+                delete scheduledInputEl.dataset.fixed;
+                scheduledInputEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            }
             document.getElementById('bookingModal').classList.add('hidden');
         });
     }
