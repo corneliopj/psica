@@ -2,6 +2,7 @@ import { Calendar } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 
 document.addEventListener('DOMContentLoaded', function(){
     const el = document.getElementById('calendar');
@@ -9,6 +10,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
     const calendar = new Calendar(el, {
         plugins: [ dayGridPlugin, timeGridPlugin, interactionPlugin ],
+        locale: 'pt-br',
+        locales: [ ptBrLocale ],
+        firstDay: 1,
+        slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+        eventTimeFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
         initialView: 'timeGridWeek',
         selectable: true,
         selectAllow: function(selectInfo) {
@@ -44,6 +50,13 @@ document.addEventListener('DOMContentLoaded', function(){
             scheduledInput.readOnly = true;
             scheduledInput.dataset.fixed = '1';
             scheduledInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+            // show Brazilian formatted display and hide the editable input
+            const display = document.getElementById('booking_scheduled_display');
+            if(display){
+                display.innerText = formatBR(dt);
+                display.classList.remove('hidden');
+                scheduledInput.classList.add('hidden');
+            }
             nameInput.value = '';
             phoneInput.value = '';
             errorBox.innerText = '';
@@ -99,12 +112,14 @@ document.addEventListener('DOMContentLoaded', function(){
                 calendar.addEvent({ id: busyId, display: 'background', start: js.event.scheduled_at, end: js.event.ends_at ?? js.event.end, color: '#f87171' });
                 // close modal
                 const modalEl = document.getElementById('bookingModal');
-                // if scheduled input was fixed, reset readonly state
+                // if scheduled input was fixed, reset readonly state and restore visible input
                 const scheduledInputEl = document.getElementById('booking_scheduled_at');
                 if(scheduledInputEl && scheduledInputEl.dataset.fixed){
                     scheduledInputEl.readOnly = false;
                     delete scheduledInputEl.dataset.fixed;
                     scheduledInputEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    const display = document.getElementById('booking_scheduled_display');
+                    if(display){ display.classList.add('hidden'); scheduledInputEl.classList.remove('hidden'); }
                 }
                 modalEl.classList.add('hidden');
             }).catch(err => {
@@ -121,8 +136,20 @@ document.addEventListener('DOMContentLoaded', function(){
                 scheduledInputEl.readOnly = false;
                 delete scheduledInputEl.dataset.fixed;
                 scheduledInputEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                const display = document.getElementById('booking_scheduled_display');
+                if(display){ display.classList.add('hidden'); scheduledInputEl.classList.remove('hidden'); }
             }
             document.getElementById('bookingModal').classList.add('hidden');
         });
+    }
+
+    function pad(n){ return n<10 ? '0'+n : ''+n }
+    function formatBR(d){
+        const day = pad(d.getDate());
+        const month = pad(d.getMonth()+1);
+        const year = d.getFullYear();
+        const hours = pad(d.getHours());
+        const mins = pad(d.getMinutes());
+        return `${day}/${month}/${year} ${hours}:${mins}`;
     }
 });

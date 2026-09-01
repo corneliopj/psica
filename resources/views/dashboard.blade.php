@@ -66,6 +66,7 @@
                                 <div class="mb-3">
                                     <label class="block text-sm">Horário</label>
                                     <input id="booking_scheduled_at" name="scheduled_at" type="datetime-local" class="w-full border rounded p-2" required>
+                                    <div id="booking_scheduled_display" class="mt-2 text-sm text-gray-700 hidden"></div>
                                 </div>
                                 <div class="flex justify-end gap-2">
                                     <button type="button" id="booking_cancel" class="px-3 py-2 border rounded">Cancelar</button>
