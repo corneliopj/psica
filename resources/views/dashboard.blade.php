@@ -44,7 +44,14 @@
                     </div>
                 </a>
             </div>
-            <div class="mt-8 bg-white shadow sm:rounded-lg p-6">
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="col-span-2 bg-white shadow sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Agenda (calendário)</h3>
+                    <div id="calendar"></div>
+                </div>
+
+                <div class="bg-white shadow sm:rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Próximos agendamentos</h3>
                 <h3 class="text-lg font-semibold mb-4">Próximos agendamentos</h3>
                 @php
                     $upcoming = \App\Models\Agendamento::with('paciente')->where('scheduled_at', '>=', now())->orderBy('scheduled_at')->limit(10)->get();
@@ -66,6 +73,7 @@
                         @endforeach
                     </ul>
                 @endif
+                </div>
             </div>
 
         </div>
