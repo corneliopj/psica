@@ -10,6 +10,21 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Encerramento do incidente HTTP 500 no servidor Plesk.
+
+### Resultado
+
+- o erro deixou de ocorrer em produção e foi considerado corrigido;
+- a causa raiz não foi confirmada porque os logs disponíveis não continham o incidente do servidor.
+
+### Pendência
+
+Manter a verificação dos logs do Plesk caso o erro reapareça, para identificar a causa técnica com precisão.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Provisionamento de usuários demo no MariaDB remoto para testes de autenticação.
 
 ### Alterações

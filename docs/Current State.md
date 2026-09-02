@@ -74,10 +74,16 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 - Execução local de comandos PHP, inclusive `php -l`, é inviável no dev container devido à incompatibilidade com `libcrypto.so.1.1` (OpenSSL 1.1.1); a validação executável permanece delegada ao pipeline de CI/CD externo.
 
+### Produção
+
+- o erro HTTP 500 observado no servidor Plesk foi considerado resolvido após deixar de ocorrer;
+- a causa raiz do incidente não foi confirmada nos logs disponíveis.
+
 ---
 
 ## Últimas alterações importantes
 
+- 2026-09-02 — erro HTTP 500 no servidor Plesk considerado resolvido após desaparecer em produção; causa raiz não confirmada;
 - 2026-09-02 — adicionada imagem PHP Docker com `pdo_mysql`; o ambiente passou a selecionar o driver `mariadb`, e o `.env` deixou de ser rastreado pelo Git;
 - 2026-09-02 — corrigida a listagem de prontuários para carregar a relação Eloquent `paciente`, em vez da relação inexistente `patient`;
 - 2026-09-01 — documentação do projeto foi atualizada para refletir o contexto real e o estado atual do repositório;

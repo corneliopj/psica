@@ -25,11 +25,11 @@ Antes de tomar decisões, considere as fontes na seguinte ordem:
 
 1. `AGENTS.md`
 2. `README.md`
-3. `docs/PROJECT_CONTEXT.md`
-4. `docs/ARCHITECTURE.md`
-5. `docs/DECISIONS.md`
-6. `docs/CURRENT_STATE.md`
-7. `docs/WORK_LOG.md`
+3. `docs/Project Context.md`
+4. `docs/Architectural and Project Decisions.md`
+5. `docs/Architectural and Project Decisions.md`
+6. `docs/Current State.md`
+7. `docs/Work Log.md`
 8. código-fonte
 9. testes
 10. configurações e demais arquivos
@@ -93,11 +93,11 @@ Ao iniciar uma tarefa relevante:
 
 1. leia este arquivo;
 2. leia `README.md`;
-3. leia `docs/PROJECT_CONTEXT.md`;
-4. leia `docs/CURRENT_STATE.md`;
-5. consulte `docs/ARCHITECTURE.md` quando a tarefa envolver arquitetura;
-6. consulte `docs/DECISIONS.md` quando houver decisões relacionadas;
-7. consulte `docs/WORK_LOG.md` quando o histórico recente for relevante;
+3. leia `docs/Project Context.md`;
+4. leia `docs/Current State.md`;
+5. consulte `docs/Architectural and Project Decisions.md` quando a tarefa envolver arquitetura;
+6. consulte `docs/Architectural and Project Decisions.md` quando houver decisões relacionadas;
+7. consulte `docs/Work Log.md` quando o histórico recente for relevante;
 8. examine o código e os testes necessários.
 
 Não leia indiscriminadamente todo o repositório se isso não for necessário.
@@ -236,7 +236,7 @@ Não altere documentação apenas para gerar atividade.
 
 Decisões importantes devem ser registradas em:
 
-`docs/DECISIONS.md`
+`docs/Architectural and Project Decisions.md`
 
 Uma decisão deve registrar:
 
@@ -254,7 +254,7 @@ Uma decisão deve registrar:
 
 Ao concluir uma tarefa significativa, avalie se:
 
-`docs/CURRENT_STATE.md`
+`docs/Current State.md`
 
 precisa ser atualizado.
 
@@ -268,7 +268,7 @@ Não deixe informações obsoletas.
 
 Use:
 
-`docs/WORK_LOG.md`
+`docs/Work Log.md`
 
 para registrar acontecimentos relevantes.
 
