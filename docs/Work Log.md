@@ -10,6 +10,22 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Correção das URLs de assets quando a aplicação é acessada pelo domínio encaminhado do Codespaces.
+
+### Alterações
+
+- Laravel passou a confiar nos proxies reversos configurados pelo ambiente;
+- Nginx passou a encaminhar o host e o protocolo originais nos requests FastCGI.
+
+### Validação
+
+- a home passou a gerar URLs `https://...app.github.dev` para imagens e assets quando testada com os headers do proxy;
+- suíte completa validada após a alteração.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Correção de inconsistência no carregamento de relações de prontuários.
 
 ### Alterações
