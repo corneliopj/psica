@@ -4,7 +4,7 @@
 
 ## Estado geral
 
-O projeto está estruturado como uma aplicação Laravel de gestão de clínica com módulos de pacientes, prontuários, agendamentos e disponibilidade por slots. A arquitetura principal já está implementada no código, mas a validação executável está bloqueada pelo ambiente local de PHP, que não inicia corretamente com a biblioteca OpenSSL necessária para o Laravel.
+O projeto está estruturado como uma aplicação Laravel de gestão de clínica com módulos de pacientes, prontuários, agendamentos e disponibilidade por slots. A arquitetura principal já está implementada no código. Como o projeto rodará em um servidor externo, a validação executável e os testes automatizados dependem de deploy nesse ambiente remoto, não sendo prioritário corrigir o ambiente de execução PHP local no container de desenvolvimento.
 
 ---
 
@@ -38,7 +38,6 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Problemas conhecidos
 
-- `php artisan test` falha antes de iniciar por falta de `libcrypto.so.1.1`;
 - há um padrão de compatibilidade dual entre nomes em inglês e em português, que pode causar bugs em runtime;
 - o `ProntuarioController` usa `with('patient')` enquanto o relacionamento do modelo é `paciente`;
 - alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
@@ -48,10 +47,10 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Dívida técnica prioritária
 
-1. corrigir o ambiente de execução do PHP / OpenSSL;
-2. validar e unificar nomes de tabelas e colunas do banco;
-3. testar e corrigir os caminhos de relacionamento Eloquent inconsistentes;
-4. confirmar a lógica de conflitos entre slots e agendamentos em produção real.
+1. validar e unificar nomes de tabelas e colunas do banco;
+2. testar e corrigir os caminhos de relacionamento Eloquent inconsistentes;
+3. confirmar a lógica de conflitos entre slots e agendamentos em produção real;
+4. preparar a estrutura de deploy/CI para rodar os testes automatizados no servidor externo.
 
 ---
 
@@ -59,7 +58,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ### Funcionando
 
-- nenhum teste foi executado com sucesso até o momento, pois a aplicação não iniciou no ambiente atual.
+- Testes e execução são direcionados ao servidor externo através do pipeline de deploy.
 
 ### Ausentes
 
@@ -69,7 +68,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ### Falhando
 
-- `php artisan test --stop-on-failure` falha com erro de runtime do PHP: `OPENSSL_1_1_1 not found`.
+- Execução local de `php artisan test` é inviável no dev container devido à falta de `libcrypto.so.1.1` (OpenSSL 1.1.1), sendo delegada ao pipeline de CI/CD externo.
 
 ---
 
@@ -89,16 +88,14 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Próximo passo recomendado
 
-1. corrigir a instalação/versão do PHP no ambiente do dev container;
-2. rodar a suíte de testes do Laravel;
-3. validar os fluxos de agendamento e slot com dados reais;
-4. resolver inconsistências de nomenclatura no banco e nos relacionamentos.
+1. validar e corrigir inconsistências de nomenclatura no banco e nos relacionamentos de modelos e controllers (ex: `ProntuarioController` x modelo `Prontuario`);
+2. analisar a lógica de conflitos de horários em solicitações e slots;
+3. validar o fluxo de deploy e verificar os logs de execução no servidor externo se disponíveis.
 
 ---
 
 ## Bloqueios
 
-- ambiente de execução incompatível com OpenSSL 1.1.1;
 - documentação do projeto ainda em template incompleto e não refletindo a realidade do código;
 - risco de regressão por nomes de tabela e colunas divergentes.
 

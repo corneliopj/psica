@@ -30,28 +30,26 @@ Inicialização de continuidade do projeto e reconstrução do contexto do repos
 
 ### Testes
 
-- comando executado: `cd /workspaces/psica && php artisan test --stop-on-failure`;
-- resultado: falha antes da execução da aplicação por incompatibilidade do ambiente com OpenSSL 1.1.1 (`libcrypto.so.1.1: version OPENSSL_1_1_1 not found`).
+- Nota: Esclarecido que o projeto rodará em um servidor externo e, por isso, os testes dependem de deploy lá. Não é necessário sanar o problema de OpenSSL localmente para rodar testes no dev container.
 
 ### Decisões
 
 - ADR-001 — compatibilidade com nomenclatura em português e inglês;
-- ADR-002 — fluxo público + calendário administrativo.
+- ADR-002 — fluxo público + calendário administrativo;
+- ADR-003 — conexão com MariaDB remoto.
 
 ### Problemas
 
-- ambiente de execução atual bloqueia validação do Laravel;
 - documentação do projeto estava desatualizada;
 - há risco de inconsistência em nomes de tabelas e relações Eloquent.
 
 ### Pendências
 
-- corrigir o ambiente PHP/openssl do container;
-- validar os fluxos reais de agendamento e slots;
-- revisar inconsistências de relacionamento e nomenclatura.
+- validar e corrigir inconsistências de relacionamentos e nomenclaturas (ex: `ProntuarioController` chamando `with('patient')` em vez de `paciente`);
+- validar os fluxos lógicos de agendamento e slots.
 
 ### Próximo passo
 
-Corrigir o ambiente de execução para permitir testes e, em seguida, validar o fluxo principal de geração de agendamentos e slots em contexto real.
+Identificar e corrigir inconsistências conhecidas no código PHP (como no `ProntuarioController`) e validar a lógica estática de relacionamentos e regras de negócios no repositório.
 
 ---
