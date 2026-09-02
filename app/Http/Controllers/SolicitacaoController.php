@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Paciente;
 use App\Models\Agendamento;
+use App\Models\Slot;
 
 class SolicitacaoController extends Controller
 {
@@ -31,6 +32,15 @@ class SolicitacaoController extends Controller
         );
 
         $scheduled = \Carbon\Carbon::parse($data['scheduled_at']);
+
+        $availableSlot = Slot::where('status', 'free')
+            ->where('start', '<=', $scheduled)
+            ->where('end', '>=', $scheduled->copy()->addHour())
+            ->exists();
+
+        if (!$availableSlot) {
+            return back()->withInput()->withErrors(['scheduled_at' => 'Selecione um horário disponível no calendário.']);
+        }
 
         // Check if slot is free (exact timestamp)
         $exists = Agendamento::where('scheduled_at', $scheduled->toDateTimeString())->exists();
