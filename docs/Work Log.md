@@ -10,6 +10,23 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Provisionamento de usuários demo no MariaDB remoto para testes de autenticação.
+
+### Alterações
+
+- criadas/atualizadas diretamente na tabela `users` as contas `admin@psica.dev`, `helena@psica.dev` e `paciente@psica.dev`;
+- operação executada com `updateOrCreate`, evitando duplicação por e-mail;
+- senha de teste definida somente no ambiente remoto e não registrada neste documento.
+
+### Validação
+
+- três contas demo encontradas no banco remoto;
+- verificação CLI confirmou a validade das senhas.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Seleção de horários disponíveis no formulário público de solicitação.
 
 ### Alterações
