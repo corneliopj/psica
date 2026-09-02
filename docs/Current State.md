@@ -10,6 +10,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Implementado
 
+- fallback de hospedagem com a raiz do projeto como document root, usando `index.php` e `.htaccess` para encaminhar assets para `public/` sem expor esse prefixo na URL;
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -40,6 +41,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Problemas conhecidos
 
+- a publicação da raiz do projeto depende de Apache/servidor compatível com `mod_rewrite` e `AllowOverride`; Nginx deve usar a configuração equivalente em vez de `.htaccess`;
 - há um padrão de compatibilidade dual entre nomes em inglês e em português, que pode causar bugs em runtime;
 - alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
 - o ambiente de dados foi definido como MariaDB remoto em infraestrutura externa, o que exige configuração explícita do `.env` e revisão de conexão em todo o ambiente de execução.

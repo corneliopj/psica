@@ -10,6 +10,23 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Compatibilidade com servidor externo que usa a raiz do Laravel como document root.
+
+### Alterações
+
+- adicionado `index.php` na raiz como front controller compatível com Laravel;
+- adicionado `.htaccess` para servir assets de `public/` com URLs sem `/public` e encaminhar rotas ao Laravel;
+- bloqueado acesso direto a código-fonte, dependências e arquivos de configuração.
+
+### Validação
+
+- `php -l index.php` sem erros;
+- suíte completa: 25 testes e 61 asserções aprovados.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Correção das URLs de assets quando a aplicação é acessada pelo domínio encaminhado do Codespaces.
 
 ### Alterações

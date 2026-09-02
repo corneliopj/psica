@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never expose application source or deployment configuration.
+    RewriteRule ^(?:\.env|app|bootstrap|config|database|resources|routes|storage/framework|tests|vendor)(?:/|$) - [F,L]
+
+    # Keep public assets available without exposing /public in the URL.
+    RewriteRule ^(build|images|favicon|storage)/(.*)$ public/$1/$2 [END]
+
+    # Send application routes to Laravel's public front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ public/index.php [END]
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteRule ^(?:composer\.(?:json|lock)|artisan|server\.php|phpunit\.xml)$ - [F,L]
+</IfModule>
