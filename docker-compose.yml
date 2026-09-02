@@ -1,7 +1,10 @@
 version: '3.8'
 services:
   php:
-    image: php:8.2-fpm
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    image: psica-php:8.2
     container_name: psica_php
     working_dir: /var/www/html
     volumes:
@@ -36,6 +39,8 @@ services:
   db:
     image: mariadb:10.11
     container_name: psica_db
+    profiles:
+      - local-db
     environment:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: psica

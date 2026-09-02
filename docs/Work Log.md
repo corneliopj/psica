@@ -27,6 +27,26 @@ Analisar a lógica de conflitos entre solicitações, agendamentos e slots.
 
 ---
 
+## 2026-09-02
+
+**Tarefa:**
+
+Preparação e validação do acesso ao MariaDB remoto.
+
+### Alterações
+
+- adicionada a imagem PHP em `docker/php/Dockerfile`, com a extensão `pdo_mysql`;
+- `docker-compose.yml` passou a construir a imagem PHP do projeto e a tratar o MariaDB local como perfil opcional `local-db`;
+- `.env` passou a selecionar o driver `mariadb`; `.env.example` foi alinhado com a configuração remota;
+- `.env` foi removido do índice Git e voltou a ser ignorado, preservando o arquivo local.
+
+### Validação
+
+- a imagem foi construída com sucesso e carregou `pdo_mysql`;
+- `docker compose run --rm --no-deps php php artisan migrate:status --no-ansi` confirmou conexão com o MariaDB remoto e listou todas as migrations como aplicadas, sem executar alterações.
+
+---
+
 ## 2026-09-01
 
 **Agente:** MAI-Code-1.1-Flash

@@ -16,6 +16,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - dashboard administrativo com calendário FullCalendar em `resources/js/calendar.js`;
 - API pública para listagem de agendamentos (`/api/agendamentos`) e slots (`/api/slots`);
 - API de criação de agendamento via calendário (`/api/solicitar`).
+- conexão com o MariaDB remoto validada por `docker compose run --rm --no-deps php php artisan migrate:status --no-ansi`;
+- imagem Docker PHP com a extensão `pdo_mysql` para acesso a MySQL/MariaDB.
 
 ---
 
@@ -29,7 +31,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Planejado
 
-- corrigir o ambiente PHP/openssl para permitir execução de testes e app;
+- avaliar a necessidade de corrigir o binário PHP do dev container, pois os comandos da aplicação podem ser executados pela imagem Docker;
 - rodar suíte de testes e ajustar bugs reais de integração;
 - revisar e unificar convenções de nomenclatura de banco de dados;
 - melhorar a documentação de fluxo e regras de negócio.
@@ -58,6 +60,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 ### Funcionando
 
 - Testes e execução são direcionados ao servidor externo através do pipeline de deploy.
+- A conexão somente leitura ao MariaDB remoto foi confirmada via `migrate:status` na imagem Docker PHP.
 
 ### Ausentes
 
@@ -73,6 +76,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Últimas alterações importantes
 
+- 2026-09-02 — adicionada imagem PHP Docker com `pdo_mysql`; o ambiente passou a selecionar o driver `mariadb`, e o `.env` deixou de ser rastreado pelo Git;
 - 2026-09-02 — corrigida a listagem de prontuários para carregar a relação Eloquent `paciente`, em vez da relação inexistente `patient`;
 - 2026-09-01 — documentação do projeto foi atualizada para refletir o contexto real e o estado atual do repositório;
 - 2026-09-01 — avaliação inicial do código revelou o fluxo de agendamento, slots e compatibilidade de banco de dados.
@@ -103,4 +107,4 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Observações para o próximo agente
 
-O projeto tem a estrutura principal do domínio já implementada, mas o ambiente atual impede a validação real. O próximo agente deve priorizar a correção do ambiente e a execução de testes antes de fazer qualquer mudança funcional mais ampla.
+O binário PHP do dev container continua incompatível com OpenSSL, mas a imagem Docker do projeto possui `pdo_mysql` e acesso comprovado ao MariaDB remoto. Use `docker compose run --rm --no-deps php php artisan <comando>` para validações PHP enquanto o ambiente local não for corrigido.
