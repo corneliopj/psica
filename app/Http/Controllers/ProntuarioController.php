@@ -12,7 +12,7 @@ class ProntuarioController extends Controller
 {
     public function index(): View
     {
-        $prontuarios = Prontuario::with('patient')->latest()->paginate(20);
+        $prontuarios = Prontuario::with('paciente')->latest()->paginate(20);
         return view('prontuarios.index', compact('prontuarios'));
     }
 

@@ -6,6 +6,27 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 ---
 
+## 2026-09-02
+
+**Tarefa:**
+
+Correção de inconsistência no carregamento de relações de prontuários.
+
+### Alterações
+
+- `ProntuarioController::index()` passou a carregar a relação `paciente`, definida no modelo `Prontuario`, no lugar da relação inexistente `patient`.
+
+### Validação
+
+- diagnóstico do editor não encontrou erros no controller;
+- `php -l app/Http/Controllers/ProntuarioController.php` não executou porque o binário PHP falhou ao carregar `libcrypto.so.1.1` com a versão `OPENSSL_1_1_1` requerida.
+
+### Próximo passo
+
+Analisar a lógica de conflitos entre solicitações, agendamentos e slots.
+
+---
+
 ## 2026-09-01
 
 **Agente:** MAI-Code-1.1-Flash

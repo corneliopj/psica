@@ -1,6 +1,6 @@
 # Current State
 
-**Última atualização:** 2026-09-01
+**Última atualização:** 2026-09-02
 
 ## Estado geral
 
@@ -39,7 +39,6 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 ## Problemas conhecidos
 
 - há um padrão de compatibilidade dual entre nomes em inglês e em português, que pode causar bugs em runtime;
-- o `ProntuarioController` usa `with('patient')` enquanto o relacionamento do modelo é `paciente`;
 - alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
 - o ambiente de dados foi definido como MariaDB remoto em infraestrutura externa, o que exige configuração explícita do `.env` e revisão de conexão em todo o ambiente de execução.
 
@@ -68,12 +67,13 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ### Falhando
 
-- Execução local de `php artisan test` é inviável no dev container devido à falta de `libcrypto.so.1.1` (OpenSSL 1.1.1), sendo delegada ao pipeline de CI/CD externo.
+- Execução local de comandos PHP, inclusive `php -l`, é inviável no dev container devido à incompatibilidade com `libcrypto.so.1.1` (OpenSSL 1.1.1); a validação executável permanece delegada ao pipeline de CI/CD externo.
 
 ---
 
 ## Últimas alterações importantes
 
+- 2026-09-02 — corrigida a listagem de prontuários para carregar a relação Eloquent `paciente`, em vez da relação inexistente `patient`;
 - 2026-09-01 — documentação do projeto foi atualizada para refletir o contexto real e o estado atual do repositório;
 - 2026-09-01 — avaliação inicial do código revelou o fluxo de agendamento, slots e compatibilidade de banco de dados.
 
@@ -88,8 +88,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Próximo passo recomendado
 
-1. validar e corrigir inconsistências de nomenclatura no banco e nos relacionamentos de modelos e controllers (ex: `ProntuarioController` x modelo `Prontuario`);
-2. analisar a lógica de conflitos de horários em solicitações e slots;
+1. analisar a lógica de conflitos de horários em solicitações e slots;
+2. validar e corrigir demais inconsistências de nomenclatura no banco e nos relacionamentos de modelos e controllers;
 3. validar o fluxo de deploy e verificar os logs de execução no servidor externo se disponíveis.
 
 ---
