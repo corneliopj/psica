@@ -10,6 +10,25 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Seleção de horários disponíveis no formulário público de solicitação.
+
+### Alterações
+
+- substituído o input manual de data por calendário mensal com horários carregados de `/api/slots`;
+- somente slots com status `free` podem ser selecionados;
+- o backend valida que o horário enviado pertence a um slot livre com duração de uma hora;
+- corrigido o fallback de headers de proxy no Nginx para evitar erro 500 quando os headers chegam vazios.
+
+### Validação
+
+- build do Vite concluído;
+- `/solicitar` respondeu HTTP 200 e renderizou o calendário;
+- suíte completa: 25 testes e 61 asserções aprovados.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Compatibilidade com servidor externo que usa a raiz do Laravel como document root.
 
 ### Alterações
