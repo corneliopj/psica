@@ -10,6 +10,25 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Criação de usuários iniciais no banco MariaDB remoto para o domínio `psi.cpetersenjr.com`.
+
+### Alterações
+
+- criada a conta `admin@psi.cpetersenjr.com` com perfil `admin`;
+- criada a conta `paciente@psi.cpetersenjr.com` com perfil `paciente`;
+- criada a conta `doutor@psi.cpetersenjr.com` com perfil `profissional`;
+- credenciais temporárias não foram registradas neste documento.
+
+### Validação
+
+- os três registros foram encontrados na tabela `usuarios`;
+- status confirmado como `ativo`;
+- autenticação das três credenciais temporárias validada via CLI.
+
+## 2026-09-02
+
+**Tarefa:**
+
 Encerramento do incidente HTTP 500 no servidor Plesk.
 
 ### Resultado
