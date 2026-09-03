@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Agendamento;
 use App\Models\Fatura;
+use App\Models\Notificacao;
 use App\Models\Paciente;
 use App\Models\Profissional;
 use App\Models\Prontuario;
@@ -48,9 +49,31 @@ class DashboardController extends Controller
         $profissional = Profissional::query()->where('usuario_id', $usuario->id)->first();
 
         $agendamentos = Agendamento::with('paciente')
-            ->when($profissional, fn ($query) => $query->where('profissional_id', $profissional->id))
+            ->when(
+                $profissional,
+                fn ($query) => $query->where('profissional_id', $profissional->id),
+                fn ($query) => $query->whereRaw('1 = 0')
+            )
             ->where(Agendamento::startColumn(), '>=', now()->subDay())
             ->orderBy(Agendamento::startColumn())
+            ->limit(10)
+            ->get();
+
+        $solicitacoesPendentes = Agendamento::with('paciente')
+            ->when(
+                $profissional,
+                fn ($query) => $query->where('profissional_id', $profissional->id),
+                fn ($query) => $query->whereRaw('1 = 0')
+            )
+            ->where('status', 'solicitado')
+            ->orderBy(Agendamento::startColumn())
+            ->limit(20)
+            ->get();
+
+        $notificacoesPendentes = Notificacao::query()
+            ->where('usuario_id', $usuario->id)
+            ->where('status', 'pendente')
+            ->latest()
             ->limit(10)
             ->get();
 
@@ -58,7 +81,10 @@ class DashboardController extends Controller
             'perfil' => 'profissional',
             'profissional' => $profissional,
             'agendamentos' => $agendamentos,
-            'solicitacoes_pendentes' => $agendamentos->where('status', 'solicitado')->count(),
+            'solicitacoes_pendentes' => $solicitacoesPendentes->count(),
+            'solicitacoes_lista' => $solicitacoesPendentes,
+            'notificacoes_pendentes' => $notificacoesPendentes->count(),
+            'notificacoes' => $notificacoesPendentes,
         ];
     }
 

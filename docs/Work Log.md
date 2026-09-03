@@ -10,6 +10,35 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Correção de visibilidade da sessão solicitada para doutor e geração de notificação.
+
+### Diagnóstico
+
+- sessões solicitadas estavam sendo criadas, mas o painel do profissional dependia de uma lista limitada de agendamentos e não tinha listagem dedicada de pendências;
+- não havia registro explícito de notificação para o doutor no momento da criação da solicitação.
+
+### Alterações
+
+- `SolicitacaoController` passou a criar `Notificacao` para o `usuario_id` do doutor selecionado, com canal `agendamento` e status `pendente`;
+- `DashboardController` passou a carregar separadamente:
+	- lista de solicitações pendentes (`status=solicitado`) do profissional logado;
+	- notificações pendentes do usuário profissional;
+- `resources/views/dashboard.blade.php` passou a exibir bloco de notificações pendentes e a lista dedicada de solicitações para confirmar.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SolicitacaoPacienteSchemaTest.php tests/Feature/DashboardPorPerfilTest.php tests/Feature/SlotCreationTest.php --no-ansi` aprovou 11 testes e 45 asserções;
+- `npm run build` concluído com sucesso.
+
+### Cobertura adicionada
+
+- teste de dashboard do profissional com solicitação pendente e notificação visível;
+- testes de solicitação passaram a verificar criação de notificação para o doutor.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Implementação do wizard de solicitação com escolha prévia de doutor e filtro de horários por profissional.
 
 ### Alterações

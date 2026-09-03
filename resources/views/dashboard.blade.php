@@ -129,20 +129,38 @@
                         </div>
                     </div>
 
-                    <div class="bg-white shadow sm:rounded-lg p-6">
-                        <h3 class="text-lg font-semibold mb-2">Solicitações para confirmar</h3>
-                        <p class="text-sm text-gray-500 mb-4">Clique na sessão amarela do calendário para confirmar.</p>
-                        <div class="text-3xl font-bold text-amber-500">{{ $dashboard['solicitacoes_pendentes'] }}</div>
-                        <div class="mt-6 space-y-3">
-                            @forelse($dashboard['agendamentos'] as $agendamento)
-                                <div class="border rounded p-3">
-                                    <div class="font-medium">{{ $agendamento->paciente?->name ?? 'Paciente' }}</div>
-                                    <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($agendamento->scheduled_at)->format('d/m/Y H:i') }}</div>
-                                    <div class="text-sm {{ $agendamento->status === 'confirmado' ? 'text-blue-600' : 'text-amber-600' }}">{{ ucfirst($agendamento->status) }}</div>
-                                </div>
-                            @empty
-                                <div class="text-gray-500">Nenhuma sessão futura encontrada.</div>
-                            @endforelse
+                    <div class="space-y-6">
+                        <div class="bg-white shadow sm:rounded-lg p-6">
+                            <h3 class="text-lg font-semibold mb-2">Solicitações para confirmar</h3>
+                            <p class="text-sm text-gray-500 mb-4">Clique na sessão amarela do calendário para confirmar.</p>
+                            <div class="text-3xl font-bold text-amber-500">{{ $dashboard['solicitacoes_pendentes'] }}</div>
+                            <div class="mt-6 space-y-3">
+                                @forelse($dashboard['solicitacoes_lista'] as $agendamento)
+                                    <div class="border rounded p-3">
+                                        <div class="font-medium">{{ $agendamento->paciente?->name ?? 'Paciente' }}</div>
+                                        <div class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($agendamento->scheduled_at)->format('d/m/Y H:i') }}</div>
+                                        <div class="text-sm text-amber-600">Solicitado</div>
+                                    </div>
+                                @empty
+                                    <div class="text-gray-500">Nenhuma solicitação pendente.</div>
+                                @endforelse
+                            </div>
+                        </div>
+
+                        <div class="bg-white shadow sm:rounded-lg p-6">
+                            <h3 class="text-lg font-semibold mb-2">Notificações pendentes</h3>
+                            <div class="text-3xl font-bold text-indigo-600">{{ $dashboard['notificacoes_pendentes'] }}</div>
+                            <div class="mt-6 space-y-3">
+                                @forelse($dashboard['notificacoes'] as $notificacao)
+                                    <div class="border rounded p-3">
+                                        <div class="font-medium">{{ $notificacao->assunto ?? 'Notificação' }}</div>
+                                        <div class="text-sm text-gray-500">{{ $notificacao->mensagem }}</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ $notificacao->created_at?->format('d/m/Y H:i') }}</div>
+                                    </div>
+                                @empty
+                                    <div class="text-gray-500">Nenhuma notificação pendente.</div>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>

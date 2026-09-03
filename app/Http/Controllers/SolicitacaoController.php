@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Paciente;
 use App\Models\Agendamento;
+use App\Models\Notificacao;
 use App\Models\Profissional;
 use App\Models\Slot;
 use Carbon\Carbon;
@@ -12,6 +13,31 @@ use Illuminate\Support\Facades\Schema;
 
 class SolicitacaoController extends Controller
 {
+    protected function registrarNotificacaoNovaSolicitacao(Agendamento $agendamento, Profissional $profissional, Paciente $paciente): void
+    {
+        if (empty($profissional->usuario_id)) {
+            return;
+        }
+
+        $nomePaciente = $paciente->nome ?? $paciente->name ?? 'Paciente';
+        $dataHora = Carbon::parse($agendamento->scheduled_at)->format('d/m/Y H:i');
+
+        Notificacao::create([
+            'usuario_id' => $profissional->usuario_id,
+            'tipo' => 'email',
+            'canal' => 'agendamento',
+            'assunto' => 'Nova solicitação de sessão',
+            'mensagem' => "{$nomePaciente} solicitou sessão para {$dataHora}.",
+            'status' => 'pendente',
+            'payload' => [
+                'agendamento_id' => $agendamento->id,
+                'profissional_id' => $profissional->id,
+                'paciente_id' => $paciente->id,
+                'scheduled_at' => $agendamento->scheduled_at,
+            ],
+        ]);
+    }
+
     protected function pacientesTable(): string
     {
         return (new Paciente())->getTable();
@@ -195,6 +221,8 @@ class SolicitacaoController extends Controller
             profissionalId: $profissional->id,
         ));
 
+        $this->registrarNotificacaoNovaSolicitacao($ag, $profissional, $paciente);
+
         return view('solicitar_success', ['agendamento' => $ag, 'paciente' => $paciente]);
     }
 
@@ -287,6 +315,8 @@ class SolicitacaoController extends Controller
             observacoes: 'Solicitação via calendar',
             profissionalId: $profissional->id,
         ));
+
+        $this->registrarNotificacaoNovaSolicitacao($ag, $profissional, $paciente);
 
         return response()->json(['success' => true, 'event' => $ag]);
     }

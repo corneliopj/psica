@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Paciente;
+use App\Models\Notificacao;
 use App\Models\Profissional;
 use App\Models\Slot;
 use App\Models\Usuario;
@@ -60,6 +61,13 @@ class SolicitacaoPacienteSchemaTest extends TestCase
             'profissional_id' => $profissional->id,
             'status' => 'solicitado',
         ]);
+
+        $this->assertDatabaseHas('notificacoes', [
+            'usuario_id' => $profissional->usuario_id,
+            'canal' => 'agendamento',
+            'tipo' => 'email',
+            'status' => 'pendente',
+        ]);
     }
 
     public function test_paciente_logado_reaproveita_registro_vinculado_ao_usuario(): void
@@ -98,6 +106,12 @@ class SolicitacaoPacienteSchemaTest extends TestCase
             'paciente_id' => $paciente->id,
             'profissional_id' => $profissional->id,
             'status' => 'solicitado',
+        ]);
+
+        $this->assertDatabaseHas('notificacoes', [
+            'usuario_id' => $profissional->usuario_id,
+            'canal' => 'agendamento',
+            'status' => 'pendente',
         ]);
     }
 
@@ -186,5 +200,7 @@ class SolicitacaoPacienteSchemaTest extends TestCase
             'profissional_id' => $profissionalB->id,
             'status' => 'solicitado',
         ]);
+
+        $this->assertSame(2, Notificacao::query()->where('canal', 'agendamento')->count());
     }
 }
