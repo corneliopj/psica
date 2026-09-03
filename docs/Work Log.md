@@ -10,6 +10,32 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Validação no domínio `psi.cpetersenjr.com` e correção do erro 500 na solicitação por incompatibilidade de colunas de paciente.
+
+### Diagnóstico
+
+- no domínio real, após login como paciente e submissão do formulário no dashboard, ocorreu `SQLSTATE[42S22]` por consulta na coluna inexistente `phone` em `pacientes`;
+- a stacktrace apontou código antigo de `SolicitacaoController`, indicando que a instância do domínio ainda não recebeu deploy das alterações locais mais recentes.
+
+### Alterações
+
+- `SolicitacaoController` passou a resolver dinamicamente as colunas de `Paciente` (`nome/name`, `telefone/phone`, `usuario_id`, `email`) antes de criar/buscar o registro;
+- no paciente logado, a criação da solicitação passou a reaproveitar `Paciente` por `usuario_id` quando disponível;
+- `resources/views/solicitar_success.blade.php` passou a exibir fallback para `nome/name` e `telefone/phone`.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SolicitacaoPacienteSchemaTest.php tests/Feature/SlotCreationTest.php tests/Feature/DashboardPorPerfilTest.php --no-ansi` aprovou 7 testes e 22 asserções;
+- teste manual no domínio confirmou que o erro 500 persiste em produção enquanto o deploy não for aplicado.
+
+### Pendência
+
+- publicar no servidor do domínio `psi.cpetersenjr.com` o código atualizado para eliminar o erro em runtime real.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Correção da exibição de horários livres e disponibilização do formulário no dashboard do paciente.
 
 ### Alterações

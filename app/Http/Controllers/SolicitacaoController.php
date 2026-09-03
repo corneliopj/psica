@@ -8,9 +8,99 @@ use App\Models\Agendamento;
 use App\Models\Profissional;
 use App\Models\Slot;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class SolicitacaoController extends Controller
 {
+    protected function pacientesTable(): string
+    {
+        return (new Paciente())->getTable();
+    }
+
+    protected function resolvePacienteColumn(array $candidates): ?string
+    {
+        $table = $this->pacientesTable();
+
+        foreach ($candidates as $candidate) {
+            if (Schema::hasColumn($table, $candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    protected function pacienteNomeColumn(): string
+    {
+        return $this->resolvePacienteColumn(['nome', 'name']) ?? 'nome';
+    }
+
+    protected function pacienteTelefoneColumn(): string
+    {
+        return $this->resolvePacienteColumn(['telefone', 'phone']) ?? 'telefone';
+    }
+
+    protected function pacienteUsuarioColumn(): ?string
+    {
+        return $this->resolvePacienteColumn(['usuario_id']);
+    }
+
+    protected function pacienteEmailColumn(): ?string
+    {
+        return $this->resolvePacienteColumn(['email']);
+    }
+
+    protected function buildPacientePayload(string $nome, string $telefone, ?int $usuarioId = null): array
+    {
+        $payload = [
+            $this->pacienteNomeColumn() => $nome,
+            $this->pacienteTelefoneColumn() => $telefone,
+        ];
+
+        $usuarioColumn = $this->pacienteUsuarioColumn();
+        if ($usuarioColumn !== null && $usuarioId !== null) {
+            $payload[$usuarioColumn] = $usuarioId;
+        }
+
+        $emailColumn = $this->pacienteEmailColumn();
+        if ($emailColumn !== null) {
+            $payload[$emailColumn] = null;
+        }
+
+        if (Schema::hasColumn($this->pacientesTable(), 'status')) {
+            $payload['status'] = 'ativo';
+        }
+
+        return $payload;
+    }
+
+    protected function resolvePacienteFromRequest(Request $request, array $data): Paciente
+    {
+        $nome = trim((string) $data['name']);
+        $telefone = preg_replace('/[^0-9+]/', '', (string) $data['phone']);
+
+        $usuario = $request->user();
+        $usuarioId = $usuario?->perfil === 'paciente' ? $usuario->id : null;
+
+        $payload = $this->buildPacientePayload($nome, $telefone, $usuarioId);
+
+        $usuarioColumn = $this->pacienteUsuarioColumn();
+        if ($usuarioColumn !== null && $usuarioId !== null) {
+            return Paciente::firstOrCreate([
+                $usuarioColumn => $usuarioId,
+            ], $payload);
+        }
+
+        if ($this->pacienteTelefoneColumn() === 'phone') {
+            return Paciente::firstOrCreate([
+                'phone' => $telefone,
+            ], $payload);
+        }
+
+        // Telefone criptografado nao permite busca deterministica por igualdade.
+        return Paciente::create($payload);
+    }
+
     protected function profissionalPadraoId(): ?int
     {
         return Profissional::query()->where('status', 'ativo')->value('id');
@@ -29,14 +119,7 @@ class SolicitacaoController extends Controller
             'scheduled_at' => 'required|date',
         ]);
 
-        // Normalize phone (simple)
-        $phone = preg_replace('/[^0-9+]/', '', $data['phone']);
-
-        // Find or create paciente by phone
-        $paciente = Paciente::firstOrCreate(
-            ['phone' => $phone],
-            ['name' => $data['name'], 'email' => null]
-        );
+        $paciente = $this->resolvePacienteFromRequest($request, $data);
 
         $scheduled = Carbon::parse($data['scheduled_at']);
 
@@ -126,8 +209,7 @@ class SolicitacaoController extends Controller
             'scheduled_at' => 'required|date',
         ]);
 
-        $phone = preg_replace('/[^0-9+]/', '', $data['phone']);
-        $paciente = Paciente::firstOrCreate(['phone' => $phone], ['name' => $data['name'], 'email' => null]);
+        $paciente = $this->resolvePacienteFromRequest($request, $data);
 
         $scheduled = Carbon::parse($data['scheduled_at']);
 

@@ -36,6 +36,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - confirmação do comportamento end-to-end da criação de solicitações públicas.
 - redução das consultas fixas em `scheduled_at` para concentrar a compatibilidade de esquema no modelo `Agendamento`.
 - refinamento das telas legadas fora do dashboard para refletirem integralmente o novo modelo de perfis e nomenclatura em português.
+- deploy da correção de compatibilidade de `Paciente` no fluxo `/solicitar` para o domínio `psi.cpetersenjr.com`.
 
 ---
 
@@ -96,6 +97,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 - 2026-09-03 — formulário de solicitação passou a ser renderizado também no dashboard do paciente com o mesmo calendário de horários livres;
 - 2026-09-03 — API de slots deixou de usar `toISOString()` e passou a enviar data/hora local serializada, reduzindo problemas de fuso na visualização de horários livres;
+- 2026-09-03 — corrigido no código do projeto o erro de compatibilidade de colunas de `Paciente` no fluxo de solicitação (`nome/telefone` vs `name/phone`), incluindo reaproveitamento por `usuario_id` quando o paciente está logado;
 - 2026-09-03 — corrigido o erro de `scheduled_at` obrigatório na solicitação pública com pré-seleção automática de horário livre e exibição dos slots verdes no calendário do formulário;
 - 2026-09-03 — o registro de horários livres passou a exigir início e fim explícitos, com atualização automática do calendário após criação;
 - 2026-09-03 — corrigida a configuração de testes para usar SQLite em memória; a suíte deixou de recriar o banco remoto e os usuários operacionais permaneceram intactos após nova execução de testes;
