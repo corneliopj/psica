@@ -10,6 +10,23 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Correção da exibição de horários livres e disponibilização do formulário no dashboard do paciente.
+
+### Alterações
+
+- criado o partial `resources/views/solicitar/_form.blade.php` e reutilizado em `resources/views/solicitar.blade.php` e no dashboard do paciente;
+- a API `GET /api/slots` passou a serializar `start` e `end` em formato local (`Y-m-d\TH:i:s`) em vez de UTC com `toISOString()`, reduzindo deslocamentos de horário por fuso;
+- o calendário público passou a ordenar slots livres, atualizar eventos após carregamento e manter pré-seleção estável do primeiro horário disponível.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SlotCreationTest.php tests/Feature/PermissoesPorPerfilTest.php tests/Feature/DashboardPorPerfilTest.php --no-ansi` aprovou 7 testes e 22 asserções;
+- `npm run build` concluído com sucesso.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Correção do formulário público de solicitação e do cadastro de horários livres.
 
 ### Diagnóstico

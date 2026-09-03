@@ -94,11 +94,11 @@ class SlotController extends Controller
     // Public API to list slots for calendar
     public function apiIndex(Request $request)
     {
-        $slots = Slot::all()->map(function($s){
+        $slots = Slot::query()->orderBy('start')->get()->map(function($s){
             return [
                 'id' => $s->id,
-                'start' => $s->start->toISOString(),
-                'end' => $s->end->toISOString(),
+                'start' => $s->start->format('Y-m-d\TH:i:s'),
+                'end' => $s->end->format('Y-m-d\TH:i:s'),
                 'status' => $s->status,
             ];
         });

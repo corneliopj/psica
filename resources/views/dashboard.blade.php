@@ -151,8 +151,8 @@
                     <div class="xl:col-span-2 space-y-6">
                         <div class="bg-white shadow sm:rounded-lg p-6">
                             <h3 class="text-lg font-semibold">Solicitar nova sessão</h3>
-                            <p class="mt-2 text-sm text-gray-500">O paciente vê apenas seu histórico, recibos, anotações particulares e o formulário para nova solicitação.</p>
-                            <a href="{{ route('solicitar.create') }}" class="inline-flex mt-4 px-3 py-2 bg-indigo-600 text-white rounded">Abrir formulário</a>
+                            <p class="mt-2 mb-6 text-sm text-gray-500">Escolha um horário livre direto do calendário para solicitar sua sessão.</p>
+                            @include('solicitar._form')
                         </div>
 
                         <div class="bg-white shadow sm:rounded-lg p-6">

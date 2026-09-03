@@ -50,7 +50,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderTimes(date) {
         const selectedDate = dateKey(date);
-        const slotsForDate = availableSlots.filter((slot) => dateKey(new Date(slot.start)) === selectedDate);
+        const slotsForDate = availableSlots
+            .filter((slot) => dateKey(new Date(slot.start)) === selectedDate)
+            .sort((a, b) => new Date(a.start) - new Date(b.start));
         timeOptionsElement.innerHTML = '';
         selectedSlotId = null;
         scheduledInput.value = '';
@@ -81,8 +83,11 @@ document.addEventListener('DOMContentLoaded', function () {
             return response.json();
         })
         .then((slots) => {
-            availableSlots = slots.filter((slot) => slot.status === 'free');
+            availableSlots = slots
+                .filter((slot) => slot.status === 'free')
+                .sort((a, b) => new Date(a.start) - new Date(b.start));
             calendar.render();
+            calendar.refetchEvents();
             if (availableSlots.length) {
                 renderTimes(new Date(availableSlots[0].start));
             } else {

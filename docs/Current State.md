@@ -17,6 +17,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - confirmação de sessões solicitadas pelo profissional diretamente no calendário, com codificação visual por status;
 - formulário de criação de horários livres com data, horário inicial e horário final, atualizado automaticamente no calendário após o cadastro;
 - calendário público de solicitação exibindo horários livres e pré-selecionando automaticamente um horário disponível para preencher `scheduled_at`.
+- formulário de solicitação de sessão disponível diretamente no dashboard do paciente, reutilizando o mesmo fluxo da tela pública.
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -93,6 +94,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Últimas alterações importantes
 
+- 2026-09-03 — formulário de solicitação passou a ser renderizado também no dashboard do paciente com o mesmo calendário de horários livres;
+- 2026-09-03 — API de slots deixou de usar `toISOString()` e passou a enviar data/hora local serializada, reduzindo problemas de fuso na visualização de horários livres;
 - 2026-09-03 — corrigido o erro de `scheduled_at` obrigatório na solicitação pública com pré-seleção automática de horário livre e exibição dos slots verdes no calendário do formulário;
 - 2026-09-03 — o registro de horários livres passou a exigir início e fim explícitos, com atualização automática do calendário após criação;
 - 2026-09-03 — corrigida a configuração de testes para usar SQLite em memória; a suíte deixou de recriar o banco remoto e os usuários operacionais permaneceram intactos após nova execução de testes;
