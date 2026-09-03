@@ -7,11 +7,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const calendarElement = document.getElementById('public-calendar');
     if (!calendarElement) return;
 
+    const professionalSelect = document.getElementById('public_profissional_id');
+    const calendarWrapper = document.getElementById('public-calendar-wrapper');
     const statusElement = document.getElementById('public-calendar-status');
     const timeOptionsElement = document.getElementById('public-time-options');
     const scheduledInput = document.getElementById('public_scheduled_at');
     let availableSlots = [];
     let selectedSlotId = null;
+    let calendarRendered = false;
 
     function dateKey(date) {
         return [date.getFullYear(), date.getMonth() + 1, date.getDate()]
@@ -77,27 +80,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    fetch('/api/slots')
-        .then((response) => {
-            if (!response.ok) throw new Error('Não foi possível carregar os horários.');
-            return response.json();
-        })
-        .then((slots) => {
-            availableSlots = slots
-                .filter((slot) => slot.status === 'free')
-                .sort((a, b) => new Date(a.start) - new Date(b.start));
-            calendar.render();
-            calendar.refetchEvents();
-            if (availableSlots.length) {
-                renderTimes(new Date(availableSlots[0].start));
-            } else {
-                statusElement.textContent = 'Ainda não há horários disponíveis.';
-            }
-        })
-        .catch(() => {
-            statusElement.textContent = 'Não foi possível carregar os horários. Tente novamente.';
-        });
-
     const calendar = new Calendar(calendarElement, {
         plugins: [dayGridPlugin, interactionPlugin],
         locale: 'pt-br',
@@ -123,4 +105,63 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         dayCellClassNames: (info) => availableSlots.some((slot) => dateKey(new Date(slot.start)) === dateKey(info.date)) ? ['has-availability'] : [],
     });
+
+    function loadSlotsForProfessional(profissionalId) {
+        statusElement.textContent = 'Carregando horários disponíveis...';
+        timeOptionsElement.innerHTML = '';
+        scheduledInput.value = '';
+        selectedSlotId = null;
+
+        fetch(`/api/slots?profissional_id=${encodeURIComponent(profissionalId)}`)
+        .then((response) => {
+            if (!response.ok) throw new Error('Não foi possível carregar os horários.');
+            return response.json();
+        })
+        .then((slots) => {
+            availableSlots = slots
+                .filter((slot) => slot.status === 'free')
+                .sort((a, b) => new Date(a.start) - new Date(b.start));
+
+            if (!calendarRendered) {
+                calendar.render();
+                calendarRendered = true;
+            }
+
+            calendar.refetchEvents();
+            if (availableSlots.length) {
+                renderTimes(new Date(availableSlots[0].start));
+            } else {
+                statusElement.textContent = 'Ainda não há horários disponíveis.';
+            }
+        })
+        .catch(() => {
+            statusElement.textContent = 'Não foi possível carregar os horários. Tente novamente.';
+        });
+    }
+
+    if (!professionalSelect) {
+        calendarWrapper.classList.remove('hidden');
+        loadSlotsForProfessional('');
+        return;
+    }
+
+    professionalSelect.addEventListener('change', () => {
+        const profissionalId = professionalSelect.value;
+        if (!profissionalId) {
+            availableSlots = [];
+            timeOptionsElement.innerHTML = '';
+            scheduledInput.value = '';
+            calendarWrapper.classList.add('hidden');
+            statusElement.textContent = 'Escolha o doutor para carregar os horários.';
+            return;
+        }
+
+        calendarWrapper.classList.remove('hidden');
+        loadSlotsForProfessional(profissionalId);
+    });
+
+    if (professionalSelect.value) {
+        calendarWrapper.classList.remove('hidden');
+        loadSlotsForProfessional(professionalSelect.value);
+    }
 });

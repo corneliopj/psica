@@ -18,6 +18,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - formulário de criação de horários livres com data, horário inicial e horário final, atualizado automaticamente no calendário após o cadastro;
 - calendário público de solicitação exibindo horários livres e pré-selecionando automaticamente um horário disponível para preencher `scheduled_at`.
 - formulário de solicitação de sessão disponível diretamente no dashboard do paciente, reutilizando o mesmo fluxo da tela pública.
+- fluxo de solicitação em formato wizard: escolha de doutor antes do calendário e exibição de horários filtrados por profissional.
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -100,6 +101,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - 2026-09-03 — API de slots deixou de usar `toISOString()` e passou a enviar data/hora local serializada, reduzindo problemas de fuso na visualização de horários livres;
 - 2026-09-03 — corrigido no código do projeto o erro de compatibilidade de colunas de `Paciente` no fluxo de solicitação (`nome/telefone` vs `name/phone`), incluindo reaproveitamento por `usuario_id` quando o paciente está logado;
 - 2026-09-03 — corrigido no código do projeto o fallback de profissional da solicitação: o sistema tenta resolver pelo `usuario_id` do slot escolhido e evita erro 500 quando não há profissional disponível;
+- 2026-09-03 — solicitação passou a exigir seleção explícita de doutor; conflitos de horário agora são verificados por profissional, permitindo o mesmo horário para doutores diferentes;
+- 2026-09-03 — paciente logado pode solicitar sem digitar nome/telefone; o sistema reutiliza vínculo com `usuario_id`.
 - 2026-09-03 — corrigido o erro de `scheduled_at` obrigatório na solicitação pública com pré-seleção automática de horário livre e exibição dos slots verdes no calendário do formulário;
 - 2026-09-03 — o registro de horários livres passou a exigir início e fim explícitos, com atualização automática do calendário após criação;
 - 2026-09-03 — corrigida a configuração de testes para usar SQLite em memória; a suíte deixou de recriar o banco remoto e os usuários operacionais permaneceram intactos após nova execução de testes;

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Slot;
+use App\Models\Profissional;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -51,5 +52,50 @@ class SlotCreationTest extends TestCase
         $response->assertJsonFragment([
             'status' => 'free',
         ]);
+    }
+
+    public function test_public_api_can_filter_slots_by_profissional(): void
+    {
+        $usuarioA = Usuario::factory()->create(['perfil' => 'profissional']);
+        $usuarioB = Usuario::factory()->create(['perfil' => 'profissional']);
+
+        $profissionalA = Profissional::create([
+            'usuario_id' => $usuarioA->id,
+            'nome' => 'Doutor A',
+            'status' => 'ativo',
+        ]);
+
+        $profissionalB = Profissional::create([
+            'usuario_id' => $usuarioB->id,
+            'nome' => 'Doutor B',
+            'status' => 'ativo',
+        ]);
+
+        Slot::create([
+            'start' => '2026-09-14 10:00:00',
+            'end' => '2026-09-14 11:00:00',
+            'status' => 'free',
+            'usuario_id' => $usuarioA->id,
+        ]);
+
+        Slot::create([
+            'start' => '2026-09-14 10:00:00',
+            'end' => '2026-09-14 11:00:00',
+            'status' => 'free',
+            'usuario_id' => $usuarioB->id,
+        ]);
+
+        $response = $this->getJson('/api/slots?profissional_id='.$profissionalA->id);
+
+        $response->assertOk();
+        $response->assertJsonCount(1);
+        $response->assertJsonFragment([
+            'usuario_id' => $usuarioA->id,
+        ]);
+        $response->assertJsonMissing([
+            'usuario_id' => $usuarioB->id,
+        ]);
+
+        $this->assertNotSame($profissionalA->id, $profissionalB->id);
     }
 }

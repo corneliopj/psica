@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Profissional;
 use App\Models\Slot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -94,12 +95,28 @@ class SlotController extends Controller
     // Public API to list slots for calendar
     public function apiIndex(Request $request)
     {
-        $slots = Slot::query()->orderBy('start')->get()->map(function($s){
+        $slotUserColumn = $this->usuarioRelacionamentoId();
+        $profissionalId = $request->query('profissional_id');
+
+        $query = Slot::query()->orderBy('start');
+
+        if (!empty($profissionalId)) {
+            $profissional = Profissional::query()->find($profissionalId);
+
+            if (!$profissional instanceof Profissional) {
+                return response()->json([]);
+            }
+
+            $query->where($slotUserColumn, $profissional->usuario_id);
+        }
+
+        $slots = $query->get()->map(function($s) use ($slotUserColumn){
             return [
                 'id' => $s->id,
                 'start' => $s->start->format('Y-m-d\TH:i:s'),
                 'end' => $s->end->format('Y-m-d\TH:i:s'),
                 'status' => $s->status,
+                'usuario_id' => $s->{$slotUserColumn},
             ];
         });
         return response()->json($slots);

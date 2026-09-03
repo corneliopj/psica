@@ -50,12 +50,15 @@ class SolicitacaoController extends Controller
         return $this->resolvePacienteColumn(['email']);
     }
 
-    protected function buildPacientePayload(string $nome, string $telefone, ?int $usuarioId = null): array
+    protected function buildPacientePayload(string $nome, ?string $telefone, ?int $usuarioId = null): array
     {
         $payload = [
             $this->pacienteNomeColumn() => $nome,
-            $this->pacienteTelefoneColumn() => $telefone,
         ];
+
+        if ($telefone !== null && $telefone !== '') {
+            $payload[$this->pacienteTelefoneColumn()] = $telefone;
+        }
 
         $usuarioColumn = $this->pacienteUsuarioColumn();
         if ($usuarioColumn !== null && $usuarioId !== null) {
@@ -76,11 +79,20 @@ class SolicitacaoController extends Controller
 
     protected function resolvePacienteFromRequest(Request $request, array $data): Paciente
     {
-        $nome = trim((string) $data['name']);
-        $telefone = preg_replace('/[^0-9+]/', '', (string) $data['phone']);
-
         $usuario = $request->user();
-        $usuarioId = $usuario?->perfil === 'paciente' ? $usuario->id : null;
+        $pacienteLogado = $usuario?->perfil === 'paciente';
+        $usuarioId = $pacienteLogado ? $usuario->id : null;
+
+        $nomeInformado = trim((string) ($data['name'] ?? ''));
+        $telefoneInformado = trim((string) ($data['phone'] ?? ''));
+
+        $nome = $nomeInformado !== ''
+            ? $nomeInformado
+            : trim((string) ($usuario?->nome ?? $usuario?->name ?? 'Paciente'));
+
+        $telefone = $telefoneInformado !== ''
+            ? preg_replace('/[^0-9+]/', '', $telefoneInformado)
+            : null;
 
         $payload = $this->buildPacientePayload($nome, $telefone, $usuarioId);
 
@@ -91,7 +103,7 @@ class SolicitacaoController extends Controller
             ], $payload);
         }
 
-        if ($this->pacienteTelefoneColumn() === 'phone') {
+        if ($this->pacienteTelefoneColumn() === 'phone' && $telefone !== null) {
             return Paciente::firstOrCreate([
                 'phone' => $telefone,
             ], $payload);
@@ -101,33 +113,32 @@ class SolicitacaoController extends Controller
         return Paciente::create($payload);
     }
 
-    protected function profissionalPadraoId(): ?int
+    protected function usuarioEhPaciente(Request $request): bool
     {
-        return Profissional::query()->where('status', 'ativo')->value('id')
-            ?? Profissional::query()->value('id');
+        return $request->user()?->perfil === 'paciente';
+    }
+
+    protected function validateSolicitacao(Request $request): array
+    {
+        $rules = [
+            'scheduled_at' => 'required|date',
+            'profissional_id' => 'required|integer|exists:profissionais,id',
+        ];
+
+        if ($this->usuarioEhPaciente($request)) {
+            $rules['name'] = 'nullable|string|max:255';
+            $rules['phone'] = 'nullable|string|max:50';
+        } else {
+            $rules['name'] = 'required|string|max:255';
+            $rules['phone'] = 'required|string|max:50';
+        }
+
+        return $request->validate($rules);
     }
 
     protected function slotUsuarioColumn(): string
     {
         return Schema::hasColumn('slots', 'usuario_id') ? 'usuario_id' : 'user_id';
-    }
-
-    protected function profissionalIdParaSlot(Slot $slot): ?int
-    {
-        $usuarioId = $slot->getAttribute($this->slotUsuarioColumn());
-
-        if ($usuarioId !== null) {
-            $profissionalId = Profissional::query()
-                ->where('usuario_id', $usuarioId)
-                ->where('status', 'ativo')
-                ->value('id');
-
-            if ($profissionalId !== null) {
-                return (int) $profissionalId;
-            }
-        }
-
-        return $this->profissionalPadraoId();
     }
 
     public function create()
@@ -137,19 +148,21 @@ class SolicitacaoController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:50',
-            'scheduled_at' => 'required|date',
-        ]);
+        $data = $this->validateSolicitacao($request);
 
         $paciente = $this->resolvePacienteFromRequest($request, $data);
 
         $scheduled = Carbon::parse($data['scheduled_at']);
+        $profissional = Profissional::query()->where('status', 'ativo')->find($data['profissional_id']);
+
+        if (!$profissional instanceof Profissional) {
+            return back()->withInput()->withErrors(['profissional_id' => 'Selecione um doutor ativo.']);
+        }
 
         $availableSlot = Slot::where('status', 'free')
             ->where('start', '<=', $scheduled)
             ->where('end', '>=', $scheduled->copy()->addHour())
+            ->where($this->slotUsuarioColumn(), $profissional->usuario_id)
             ->orderBy('start')
             ->first();
 
@@ -157,13 +170,9 @@ class SolicitacaoController extends Controller
             return back()->withInput()->withErrors(['scheduled_at' => 'Selecione um horário disponível no calendário.']);
         }
 
-        $profissionalId = $this->profissionalIdParaSlot($availableSlot);
-        if ($profissionalId === null) {
-            return back()->withInput()->withErrors(['scheduled_at' => 'No momento, não há profissional disponível para este horário.']);
-        }
-
         // Check if slot is free (exact timestamp)
         $exists = Agendamento::query()
+            ->where('profissional_id', $profissional->id)
             ->when(
                 Agendamento::usesLegacySchedule(),
                 fn ($query) => $query->where(Agendamento::startColumn(), $scheduled->toDateTimeString()),
@@ -183,7 +192,7 @@ class SolicitacaoController extends Controller
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via formulário público',
-            profissionalId: $profissionalId,
+            profissionalId: $profissional->id,
         ));
 
         return view('solicitar_success', ['agendamento' => $ag, 'paciente' => $paciente]);
@@ -233,17 +242,19 @@ class SolicitacaoController extends Controller
     // API store for calendar booking (AJAX)
     public function apiStore(Request $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string',
-            'phone' => 'required|string',
-            'scheduled_at' => 'required|date',
-        ]);
+        $data = $this->validateSolicitacao($request);
 
         $paciente = $this->resolvePacienteFromRequest($request, $data);
 
         $scheduled = Carbon::parse($data['scheduled_at']);
+        $profissional = Profissional::query()->where('status', 'ativo')->find($data['profissional_id']);
+
+        if (!$profissional instanceof Profissional) {
+            return response()->json(['error' => 'Selecione um doutor ativo.'], 422);
+        }
 
         $overlap = Agendamento::query()
+            ->where('profissional_id', $profissional->id)
             ->when(
                 Agendamento::usesLegacySchedule(),
                 fn ($query) => $query->where(Agendamento::startColumn(), $scheduled->toDateTimeString()),
@@ -260,16 +271,12 @@ class SolicitacaoController extends Controller
         $availableSlot = Slot::where('status', 'free')
             ->where('start', '<=', $scheduled)
             ->where('end', '>=', $scheduled->copy()->addHour())
+            ->where($this->slotUsuarioColumn(), $profissional->usuario_id)
             ->orderBy('start')
             ->first();
 
         if (!$availableSlot instanceof Slot) {
             return response()->json(['error' => 'Selecione um horário disponível no calendário.'], 422);
-        }
-
-        $profissionalId = $this->profissionalIdParaSlot($availableSlot);
-        if ($profissionalId === null) {
-            return response()->json(['error' => 'No momento, não há profissional disponível para este horário.'], 422);
         }
 
         $ag = Agendamento::create(Agendamento::makeSchedulingPayload(
@@ -278,7 +285,7 @@ class SolicitacaoController extends Controller
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via calendar',
-            profissionalId: $profissionalId,
+            profissionalId: $profissional->id,
         ));
 
         return response()->json(['success' => true, 'event' => $ag]);

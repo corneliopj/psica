@@ -10,6 +10,30 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Implementação do wizard de solicitação com escolha prévia de doutor e filtro de horários por profissional.
+
+### Alterações
+
+- o formulário de solicitação (`/solicitar` e dashboard do paciente) passou a exigir seleção de doutor antes de exibir calendário;
+- a API pública de slots passou a aceitar `profissional_id` e retornar somente horários do doutor escolhido;
+- o backend de solicitação passou a validar `profissional_id` obrigatório, filtrar slot por doutor e verificar conflito de agendamento por profissional;
+- paciente logado passou a solicitar sem digitar nome/telefone, usando dados associados ao usuário quando disponível.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SolicitacaoPacienteSchemaTest.php tests/Feature/SlotCreationTest.php tests/Feature/DashboardPorPerfilTest.php --no-ansi` aprovou 10 testes e 37 asserções;
+- `npm run build` concluído com sucesso.
+
+### Cobertura adicionada
+
+- cenário com dois doutores no mesmo horário validando criação independente de solicitações;
+- cenário de filtro de `/api/slots` por `profissional_id`;
+- cenário de paciente logado solicitando sem preenchimento manual de dados.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Correção de erro 500 em produção causado por ausência de `profissional_id` no agendamento de solicitação.
 
 ### Diagnóstico

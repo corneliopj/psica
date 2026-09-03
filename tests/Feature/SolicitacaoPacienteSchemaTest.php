@@ -43,6 +43,7 @@ class SolicitacaoPacienteSchemaTest extends TestCase
         $response = $this->post('/solicitar', [
             'name' => 'Paciente Novo',
             'phone' => '(11) 98888-7777',
+            'profissional_id' => $profissional->id,
             'scheduled_at' => '2026-09-10T14:00',
         ]);
 
@@ -85,8 +86,7 @@ class SolicitacaoPacienteSchemaTest extends TestCase
         ]);
 
         $response = $this->actingAs($usuarioPaciente)->post('/solicitar', [
-            'name' => 'Paciente Atualizado',
-            'phone' => '(11) 97777-6666',
+            'profissional_id' => $profissional->id,
             'scheduled_at' => '2026-09-11T14:00',
         ]);
 
@@ -101,12 +101,14 @@ class SolicitacaoPacienteSchemaTest extends TestCase
         ]);
     }
 
-    public function test_solicitacao_retorna_erro_amigavel_quando_nao_ha_profissional(): void
+    public function test_solicitacao_retorna_erro_quando_horario_nao_pertence_ao_doutor_escolhido(): void
     {
         $usuarioPaciente = Usuario::factory()->create([
             'perfil' => 'paciente',
             'status' => 'ativo',
         ]);
+
+        $profissional = $this->criarProfissionalAtivo();
 
         Slot::create([
             'start' => '2026-09-12 14:00:00',
@@ -118,13 +120,71 @@ class SolicitacaoPacienteSchemaTest extends TestCase
         $response = $this->actingAs($usuarioPaciente)
             ->from('/dashboard')
             ->post('/solicitar', [
-                'name' => 'Paciente Sem Profissional',
-                'phone' => '(11) 90000-0000',
+                'profissional_id' => $profissional->id,
                 'scheduled_at' => '2026-09-12T14:00',
             ]);
 
         $response->assertRedirect('/dashboard');
         $response->assertSessionHasErrors(['scheduled_at']);
         $this->assertDatabaseCount('agendamentos', 0);
+    }
+
+    public function test_dois_doutores_podem_ter_mesmo_horario_e_cada_um_recebe_sua_solicitacao(): void
+    {
+        $profissionalA = $this->criarProfissionalAtivo();
+
+        $usuarioProfissionalB = Usuario::factory()->create([
+            'perfil' => 'profissional',
+            'status' => 'ativo',
+        ]);
+
+        $profissionalB = Profissional::create([
+            'usuario_id' => $usuarioProfissionalB->id,
+            'nome' => 'Doutora B',
+            'especialidade' => 'TCC',
+            'telefone' => '(11) 90000-1000',
+            'status' => 'ativo',
+        ]);
+
+        Slot::create([
+            'start' => '2026-09-13 14:00:00',
+            'end' => '2026-09-13 15:00:00',
+            'status' => 'free',
+            'usuario_id' => $profissionalA->usuario_id,
+        ]);
+
+        Slot::create([
+            'start' => '2026-09-13 14:00:00',
+            'end' => '2026-09-13 15:00:00',
+            'status' => 'free',
+            'usuario_id' => $profissionalB->usuario_id,
+        ]);
+
+        $responseA = $this->post('/solicitar', [
+            'name' => 'Paciente A',
+            'phone' => '(11) 90000-1111',
+            'profissional_id' => $profissionalA->id,
+            'scheduled_at' => '2026-09-13T14:00',
+        ]);
+
+        $responseB = $this->post('/solicitar', [
+            'name' => 'Paciente B',
+            'phone' => '(11) 90000-2222',
+            'profissional_id' => $profissionalB->id,
+            'scheduled_at' => '2026-09-13T14:00',
+        ]);
+
+        $responseA->assertOk();
+        $responseB->assertOk();
+
+        $this->assertDatabaseCount('agendamentos', 2);
+        $this->assertDatabaseHas('agendamentos', [
+            'profissional_id' => $profissionalA->id,
+            'status' => 'solicitado',
+        ]);
+        $this->assertDatabaseHas('agendamentos', [
+            'profissional_id' => $profissionalB->id,
+            'status' => 'solicitado',
+        ]);
     }
 }
