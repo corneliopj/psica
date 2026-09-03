@@ -6,6 +6,105 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 ---
 
+## 2026-09-03
+
+**Tarefa:**
+
+Execução e verificação das migrations no banco remoto para remover a tabela legada `users`.
+
+### Resultado
+
+- `php artisan migrate --force --no-ansi` informou que não havia migrations pendentes;
+- `php artisan migrate:status --no-ansi` confirmou a migration `2026_09_03_120000_drop_legacy_users_table` como aplicada;
+- verificação via `tinker` confirmou `Schema::hasTable('users') === false` e `Schema::hasTable('usuarios') === true`.
+
+### Observação
+
+- a remoção da tabela `users` já estava efetivamente aplicada no banco configurado pelo projeto antes desta execução.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Remoção da tabela legada `users` do projeto.
+
+### Alterações
+
+- a migration inicial `0001_01_01_000000_create_users_table.php` deixou de criar a tabela `users`, preservando apenas `password_reset_tokens` e `sessions`;
+- foi adicionada a migration `2026_09_03_120000_drop_legacy_users_table.php` para remover `users` em bases já existentes;
+- foram removidos os artefatos legados `app/Models/User.php` e `database/factories/UserFactory.php`;
+- foi criado o teste `tests/Feature/UsuariosSchemaTest.php` para garantir que o schema ativo usa `usuarios` e não `users`.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/UsuariosSchemaTest.php tests/Unit/AutenticacaoUsuariosConfigTest.php tests/Feature/Auth/AuthenticationTest.php tests/Feature/Auth/PasswordResetTest.php --no-ansi` aprovou 11 testes e 24 asserções.
+
+### Observação
+
+- permanece apenas uma referência histórica a `users` em migration desativada dentro de `database/migrations/disabled/`, sem efeito no runtime.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Garantia de que o processo de autenticação usa a tabela `usuarios`.
+
+### Alterações
+
+- `config/auth.php` passou a usar `usuarios` como nome explícito do provider Eloquent e do broker de reset de senha;
+- o provider deixou de depender de `AUTH_MODEL` e passou a apontar diretamente para `App\Models\Usuario`;
+- foi criado o teste `tests/Unit/AutenticacaoUsuariosConfigTest.php` para verificar a configuração e a resolução do modelo pelo guard `web`.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Unit/AutenticacaoUsuariosConfigTest.php tests/Feature/Auth/AuthenticationTest.php tests/Feature/Auth/PasswordResetTest.php --no-ansi` aprovou 10 testes e 22 asserções.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Correção da mistura entre `User`/`users` e `Usuario`/`usuarios` no código de aplicação.
+
+### Alterações
+
+- `Prontuario` passou a usar a relação `criador()` com o modelo `Usuario`, mantendo `creator()` apenas como alias de compatibilidade;
+- `Slot` passou a expor a relação `usuario()` com fallback para a coluna legada `user_id`;
+- `SlotController` passou a gravar o vínculo do slot pela coluna resolvida dinamicamente entre `usuario_id` e `user_id`;
+- `ProntuarioRequest` deixou de validar `created_by` contra a tabela `users` e passou a resolver a tabela de `Paciente` e `Usuario` dinamicamente;
+- removida importação residual de `User` no `DatabaseSeeder`.
+
+### Validação
+
+- diagnósticos do editor sem erros nos arquivos alterados;
+- `docker compose run --rm --no-deps php sh -lc "php -l database/seeders/DatabaseSeeder.php && php -l app/Models/Prontuario.php && php -l app/Models/Slot.php && php -l app/Http/Controllers/SlotController.php && php -l app/Http/Requests/ProntuarioRequest.php"` concluiu sem erros de sintaxe.
+
+### Pendência
+
+Revisar, em uma etapa separada, os campos legados ainda presentes nas views e requests de prontuários que misturam `patient_id`/`patients` com o domínio atual em português.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Correção da compatibilidade entre o fluxo público/CRUD de agendamentos e o esquema atual da tabela `agendamentos`.
+
+### Alterações
+
+- o modelo `Agendamento` passou a centralizar a escolha entre colunas legadas (`scheduled_at`, `duration_minutes`, `notes`) e atuais (`data_hora_inicio`, `data_hora_fim`, `observacoes_cancelamento`);
+- `SolicitacaoController` e `AgendamentoController` deixaram de gravar e consultar `scheduled_at` diretamente quando o esquema ativo usa `data_hora_inicio`/`data_hora_fim`;
+- o dashboard passou a buscar próximos agendamentos pela coluna de início resolvida dinamicamente;
+- `AgendamentoRequest` passou a validar `paciente_id` contra a tabela real do modelo `Paciente`;
+- foi criado o teste unitário `tests/Unit/AgendamentoCompatibilityTest.php` para cobrir payload, accessors e serialização JSON compatíveis.
+
+### Validação
+
+- diagnósticos do editor sem erros nos arquivos alterados;
+- `docker compose run --rm --no-deps php php artisan test tests/Unit/AgendamentoCompatibilityTest.php --no-ansi` aprovou 3 testes e 18 asserções.
+
+### Próximo passo
+
+Validar o fluxo HTTP completo de solicitação pública e o CRUD de agendamentos com testes de feature cobrindo slots e conflito de horários.
+
 ## 2026-09-02
 
 **Tarefa:**

@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class SlotController extends Controller
 {
+    protected function usuarioRelacionamentoId(): string
+    {
+        return \Illuminate\Support\Facades\Schema::hasColumn('slots', 'usuario_id') ? 'usuario_id' : 'user_id';
+    }
+
     public function index()
     {
         $slots = Slot::orderBy('start')->get();
@@ -36,7 +41,7 @@ class SlotController extends Controller
                     'start' => $current->format('Y-m-d H:i:s'),
                     'end' => $current->modify('+1 hour')->format('Y-m-d H:i:s'),
                     'status' => 'free',
-                    'user_id' => Auth::id(),
+                    $this->usuarioRelacionamentoId() => Auth::id(),
                     'recurrence_rule' => 'WEEKLY'
                 ]);
                 $created[] = $slot;
@@ -47,7 +52,7 @@ class SlotController extends Controller
                 'start' => $start->format('Y-m-d H:i:s'),
                 'end' => $end->format('Y-m-d H:i:s'),
                 'status' => 'free',
-                'user_id' => Auth::id(),
+                $this->usuarioRelacionamentoId() => Auth::id(),
             ]);
             $created[] = $slot;
         }

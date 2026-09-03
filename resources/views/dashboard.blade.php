@@ -104,9 +104,12 @@
 
                 <div class="bg-white shadow sm:rounded-lg p-6">
                     <h3 class="text-lg font-semibold mb-4">Próximos agendamentos</h3>
-                <h3 class="text-lg font-semibold mb-4">Próximos agendamentos</h3>
                 @php
-                    $upcoming = \App\Models\Agendamento::with('paciente')->where('scheduled_at', '>=', now())->orderBy('scheduled_at')->limit(10)->get();
+                    $upcoming = \App\Models\Agendamento::with('paciente')
+                        ->where(\App\Models\Agendamento::startColumn(), '>=', now())
+                        ->orderBy(\App\Models\Agendamento::startColumn())
+                        ->limit(10)
+                        ->get();
                 @endphp
                 @if($upcoming->isEmpty())
                     <div class="text-gray-500">Nenhum agendamento futuro.</div>

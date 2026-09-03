@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Paciente;
-use App\Models\User;
+use App\Models\Usuario;
 
 class Prontuario extends Model
 {
@@ -34,8 +34,14 @@ class Prontuario extends Model
         return $this->belongsTo(Paciente::class, $fk);
     }
 
+    public function criador(): BelongsTo
+    {
+        $fk = Schema::hasColumn('prontuarios', 'usuario_id') ? 'usuario_id' : 'created_by';
+        return $this->belongsTo(Usuario::class, $fk);
+    }
+
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->criador();
     }
 }

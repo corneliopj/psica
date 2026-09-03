@@ -1,6 +1,6 @@
 # Current State
 
-**Última atualização:** 2026-09-02
+**Última atualização:** 2026-09-03
 
 ## Estado geral
 
@@ -11,6 +11,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 ## Implementado
 
 - fallback de hospedagem com a raiz do projeto como document root, usando `index.php` e `.htaccess` para encaminhar assets para `public/` sem expor esse prefixo na URL;
+- autenticação e schema principal consolidados sobre a tabela `usuarios`, com remoção da criação da tabela legada `users` em instalações novas;
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -27,6 +28,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - validação real da consistência dos nomes de tabela/coluna em inglês e em português;
 - verificação das regras de conflito de horários em agendamento e slots;
 - confirmação do comportamento end-to-end da criação de solicitações públicas.
+- redução das consultas fixas em `scheduled_at` para concentrar a compatibilidade de esquema no modelo `Agendamento`.
 
 ---
 
@@ -43,6 +45,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 - a publicação da raiz do projeto depende de Apache/servidor compatível com `mod_rewrite` e `AllowOverride`; Nginx deve usar a configuração equivalente em vez de `.htaccess`;
 - há um padrão de compatibilidade dual entre nomes em inglês e em português, que pode causar bugs em runtime;
+- ainda existe uma migration histórica desativada em `database/migrations/disabled/` com referência a `users`, mas ela não participa do schema ativo;
 - alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
 - o ambiente de dados foi definido como MariaDB remoto em infraestrutura externa, o que exige configuração explícita do `.env` e revisão de conexão em todo o ambiente de execução.
 
@@ -63,6 +66,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 - Testes e execução são direcionados ao servidor externo através do pipeline de deploy.
 - A conexão somente leitura ao MariaDB remoto foi confirmada via `migrate:status` na imagem Docker PHP.
+- teste unitário `AgendamentoCompatibilityTest` validado no container PHP para garantir payload e accessors compatíveis entre esquemas legado e atual.
 
 ### Ausentes
 
@@ -83,6 +87,11 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Últimas alterações importantes
 
+- 2026-09-03 — removida a tabela legada `users` do schema ativo; instalações novas passam a criar apenas `usuarios`, e uma migration adicional remove `users` de bases existentes;
+- 2026-09-03 — o processo de autenticação foi explicitamente configurado para usar o provider `usuarios` e o modelo `Usuario`; login, logout e reset de senha foram validados com a suíte de autenticação no container PHP;
+- 2026-09-03 — removidas referências ativas de aplicação a `User`/`users` em prontuários e slots; o código passou a usar `Usuario` como modelo de domínio e autenticação nesses pontos;
+- 2026-09-03 — centralizada a compatibilidade de colunas de agendamento no modelo `Agendamento`; controllers e dashboard deixaram de depender diretamente de `scheduled_at` para leitura e escrita no esquema atual;
+- 2026-09-03 — adicionado teste unitário `tests/Unit/AgendamentoCompatibilityTest.php` e validado com 3 testes e 18 asserções no container PHP;
 - 2026-09-02 — erro HTTP 500 no servidor Plesk considerado resolvido após desaparecer em produção; causa raiz não confirmada;
 - 2026-09-02 — adicionada imagem PHP Docker com `pdo_mysql`; o ambiente passou a selecionar o driver `mariadb`, e o `.env` deixou de ser rastreado pelo Git;
 - 2026-09-02 — corrigida a listagem de prontuários para carregar a relação Eloquent `paciente`, em vez da relação inexistente `patient`;
