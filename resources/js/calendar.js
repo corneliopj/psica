@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const perfil = el.dataset.perfil || 'publico';
     const podeGerenciarSlots = perfil === 'profissional' || perfil === 'admin';
 
+    function localDateTimeValue(date) {
+        return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    }
+
     const calendar = new Calendar(el, {
         plugins: [ dayGridPlugin, timeGridPlugin, interactionPlugin ],
         locale: 'pt-br',
@@ -46,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             // set scheduled input (datetime-local expects YYYY-MM-DDTHH:MM)
             const dt = new Date(info.start);
-            const localISO = new Date(dt.getTime() - dt.getTimezoneOffset()*60000).toISOString().slice(0,16);
+            const localISO = localDateTimeValue(dt);
             scheduledInput.value = localISO;
             // mark scheduled input as fixed (opened from calendar) so user can't edit it
             scheduledInput.readOnly = true;
@@ -202,24 +206,44 @@ document.addEventListener('DOMContentLoaded', function(){
     const slotModal = document.getElementById('slotModal');
     const slotForm = document.getElementById('slot_form');
     if(addSlotBtn && slotModal && podeGerenciarSlots){
-        addSlotBtn.addEventListener('click', function(){ slotModal.classList.remove('hidden'); });
+        addSlotBtn.addEventListener('click', function(){
+            const now = new Date();
+            const rounded = new Date(now);
+            rounded.setMinutes(0, 0, 0);
+            const end = new Date(rounded.getTime() + 60 * 60000);
+            const dateValue = localDateTimeValue(rounded).slice(0, 10);
+            document.getElementById('slot_date').value = dateValue;
+            document.getElementById('slot_start_time').value = localDateTimeValue(rounded).slice(11, 16);
+            document.getElementById('slot_end_time').value = localDateTimeValue(end).slice(11, 16);
+            document.getElementById('slot_error').innerText = '';
+            slotModal.classList.remove('hidden');
+        });
         document.getElementById('slot_cancel').addEventListener('click', function(){ slotModal.classList.add('hidden'); });
     }
     if(slotForm && podeGerenciarSlots){
         slotForm.addEventListener('submit', function(e){
             e.preventDefault();
-            const start = document.getElementById('slot_start').value;
+            const date = document.getElementById('slot_date').value;
+            const startTime = document.getElementById('slot_start_time').value;
+            const endTime = document.getElementById('slot_end_time').value;
             const repeat_until = document.getElementById('slot_repeat_until').value || null;
+            const errorBox = document.getElementById('slot_error');
+            const start = `${date}T${startTime}`;
+            const end = `${date}T${endTime}`;
+            errorBox.innerText = '';
             fetch('/slots', {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ start: start, repeat_weekly: repeat_until ? 1 : 0, repeat_until: repeat_until })
+                body: JSON.stringify({ start: start, end: end, repeat_weekly: repeat_until ? 1 : 0, repeat_until: repeat_until })
             }).then(async r => {
-                if(!r.ok){ alert('Erro ao criar slot'); return }
-                // refresh calendar
+                const js = await r.json().catch(() => ({}));
+                if(!r.ok){
+                    errorBox.innerText = js.message || (js.errors ? Object.values(js.errors).flat().join('. ') : 'Erro ao criar slot');
+                    return;
+                }
                 calendar.refetchEvents();
                 slotModal.classList.add('hidden');
-            }).catch(err => { alert('Erro de rede'); });
+            }).catch(() => { errorBox.innerText = 'Erro de rede'; });
         });
     }
 

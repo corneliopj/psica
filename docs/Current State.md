@@ -15,6 +15,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - tabela `slots` disponível no schema ativo para sustentar o calendário administrativo e a criação de horários livres;
 - dashboard e permissões diferenciados por perfil (`admin`, `profissional`, `paciente`);
 - confirmação de sessões solicitadas pelo profissional diretamente no calendário, com codificação visual por status;
+- formulário de criação de horários livres com data, horário inicial e horário final, atualizado automaticamente no calendário após o cadastro;
+- calendário público de solicitação exibindo horários livres e pré-selecionando automaticamente um horário disponível para preencher `scheduled_at`.
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -68,7 +70,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ### Funcionando
 
-- Testes e execução são direcionados ao servidor externo através do pipeline de deploy.
+- Os testes automatizados locais agora usam SQLite em memória via `phpunit.xml`, isolando `RefreshDatabase` do banco remoto real.
 - A conexão somente leitura ao MariaDB remoto foi confirmada via `migrate:status` na imagem Docker PHP.
 - teste unitário `AgendamentoCompatibilityTest` validado no container PHP para garantir payload e accessors compatíveis entre esquemas legado e atual.
 
@@ -91,6 +93,9 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Últimas alterações importantes
 
+- 2026-09-03 — corrigido o erro de `scheduled_at` obrigatório na solicitação pública com pré-seleção automática de horário livre e exibição dos slots verdes no calendário do formulário;
+- 2026-09-03 — o registro de horários livres passou a exigir início e fim explícitos, com atualização automática do calendário após criação;
+- 2026-09-03 — corrigida a configuração de testes para usar SQLite em memória; a suíte deixou de recriar o banco remoto e os usuários operacionais permaneceram intactos após nova execução de testes;
 - 2026-09-03 — implementada a separação do dashboard por perfil: administrador gerencia usuários, doutor gerencia agenda e confirma sessões, paciente vê histórico, recibos e anotações;
 - 2026-09-03 — calendário do profissional passou a diferenciar sessões solicitadas em amarelo e confirmadas em azul, mantendo horários livres em verde e horários indisponíveis não selecionáveis;
 - 2026-09-03 — corrigido o erro de criação de horários livres com a adição da tabela `slots` ao schema ativo; criação autenticada de slot validada por teste de feature e verificação da tabela no banco configurado;

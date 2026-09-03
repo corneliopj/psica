@@ -10,6 +10,54 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Correção do formulário público de solicitação e do cadastro de horários livres.
+
+### Diagnóstico
+
+- o campo oculto `scheduled_at` dependia de seleção manual no calendário público e podia permanecer vazio, gerando erro de validação na submissão;
+- o cadastro de horário livre aceitava apenas `start`, embora a regra de negócio pedisse início e fim explícitos.
+
+### Alterações
+
+- o calendário público passou a exibir os horários livres como eventos verdes e a pré-selecionar automaticamente o primeiro horário disponível do dia ativo;
+- o modal de criação de horário livre passou a coletar data, horário inicial e horário final;
+- `SlotController` passou a exigir `end` e a respeitar a duração informada também nas repetições semanais;
+- o calendário administrativo continua se atualizando automaticamente após a criação do slot, preservando o padrão de cores.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SlotCreationTest.php tests/Feature/PermissoesPorPerfilTest.php --no-ansi` aprovou 4 testes e 15 asserções;
+- `npm run build` concluiu com sucesso após as mudanças em `resources/js/calendar.js` e `resources/js/public-calendar.js`.
+
+### Observação
+
+- a correção do preenchimento automático de `scheduled_at` foi validada por inspeção do fluxo e pelo build dos assets; não há teste E2E de navegador neste repositório.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Prevenção de perda de dados reais durante a execução dos testes.
+
+### Diagnóstico
+
+- `phpunit.xml` não definia banco próprio para testes;
+- a suíte com `RefreshDatabase` estava usando o banco configurado pela aplicação, o que recriava o schema remoto e apagava usuários reais.
+
+### Alterações
+
+- `phpunit.xml` passou a definir `DB_CONNECTION=sqlite` e `DB_DATABASE=:memory:` para o ambiente de testes;
+- os usuários `admin@psi.cpetersenjr.com`, `paciente@psi.cpetersenjr.com` e `doutor@psi.cpetersenjr.com` foram recriados no banco remoto após a correção.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/PermissoesPorPerfilTest.php tests/Feature/DashboardPorPerfilTest.php tests/Feature/SlotCreationTest.php --no-ansi` aprovou 6 testes em 0.34s, confirmando o uso do banco isolado;
+- após nova execução de `tests/Feature/PermissoesPorPerfilTest.php`, a checagem no banco remoto confirmou a permanência dos três usuários operacionais.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Separação de experiência e permissões por perfil no sistema.
 
 ### Alterações

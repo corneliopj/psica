@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const timeOptionsElement = document.getElementById('public-time-options');
     const scheduledInput = document.getElementById('public_scheduled_at');
     let availableSlots = [];
+    let selectedSlotId = null;
 
     function dateKey(date) {
         return [date.getFullYear(), date.getMonth() + 1, date.getDate()]
@@ -39,10 +40,19 @@ document.addEventListener('DOMContentLoaded', function () {
         return new Date(date.getTime() - offset).toISOString().slice(0, 16);
     }
 
+    function selectSlot(button, slot, date) {
+        timeOptionsElement.querySelectorAll('button').forEach((item) => item.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700'));
+        button.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
+        scheduledInput.value = localInputValue(slot.start);
+        selectedSlotId = slot.id;
+        statusElement.textContent = `${formatDate(date)} às ${formatTime(slot.start)} selecionado.`;
+    }
+
     function renderTimes(date) {
         const selectedDate = dateKey(date);
         const slotsForDate = availableSlots.filter((slot) => dateKey(new Date(slot.start)) === selectedDate);
         timeOptionsElement.innerHTML = '';
+        selectedSlotId = null;
         scheduledInput.value = '';
 
         if (!slotsForDate.length) {
@@ -56,13 +66,12 @@ document.addEventListener('DOMContentLoaded', function () {
             button.type = 'button';
             button.textContent = formatTime(slot.start);
             button.className = 'rounded border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-indigo-600 hover:text-indigo-700';
-            button.addEventListener('click', () => {
-                timeOptionsElement.querySelectorAll('button').forEach((item) => item.classList.remove('border-indigo-600', 'bg-indigo-50', 'text-indigo-700'));
-                button.classList.add('border-indigo-600', 'bg-indigo-50', 'text-indigo-700');
-                scheduledInput.value = localInputValue(slot.start);
-                statusElement.textContent = `${formatDate(date)} às ${formatTime(slot.start)} selecionado.`;
-            });
+            button.addEventListener('click', () => selectSlot(button, slot, date));
             timeOptionsElement.appendChild(button);
+
+            if (selectedSlotId === null && (!scheduledInput.value || scheduledInput.value === localInputValue(slot.start))) {
+                selectSlot(button, slot, date);
+            }
         });
     }
 
@@ -91,7 +100,22 @@ document.addEventListener('DOMContentLoaded', function () {
         firstDay: 1,
         initialView: 'dayGridMonth',
         height: 'auto',
+        events: (_fetchInfo, successCallback) => {
+            successCallback(availableSlots.map((slot) => ({
+                id: `public-slot-${slot.id}`,
+                title: formatTime(slot.start),
+                start: slot.start,
+                end: slot.end,
+                allDay: false,
+                color: '#16a34a',
+                textColor: '#ffffff',
+            })));
+        },
         dateClick: (info) => renderTimes(info.date),
+        eventClick: (info) => {
+            info.jsEvent.preventDefault();
+            renderTimes(info.event.start);
+        },
         dayCellClassNames: (info) => availableSlots.some((slot) => dateKey(new Date(slot.start)) === dateKey(info.date)) ? ['has-availability'] : [],
     });
 });

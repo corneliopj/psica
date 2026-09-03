@@ -27,25 +27,26 @@ class SlotController extends Controller
     public function store(Request $request)
     {
         $this->garantirPerfilPermitido($request, ['admin', 'profissional']);
-        // authorization handled by middleware for now
         $data = $request->validate([
             'start' => 'required|date',
-            'end' => 'nullable|date',
+            'end' => 'required|date|after:start',
             'repeat_weekly' => 'nullable|boolean',
             'repeat_until' => 'nullable|date',
         ]);
 
         $start = new \DateTime($data['start']);
-        $end = isset($data['end']) ? new \DateTime($data['end']) : (clone $start)->modify('+1 hour');
+        $end = new \DateTime($data['end']);
+        $duration = $end->getTimestamp() - $start->getTimestamp();
 
         $created = [];
         if(!empty($data['repeat_weekly']) && !empty($data['repeat_until'])){
             $until = new \DateTime($data['repeat_until']);
             $current = clone $start;
             while($current <= $until){
+                $slotEnd = (clone $current)->modify('+' . ($duration / 60) . ' minutes');
                 $slot = Slot::create([
                     'start' => $current->format('Y-m-d H:i:s'),
-                    'end' => $current->modify('+1 hour')->format('Y-m-d H:i:s'),
+                    'end' => $slotEnd->format('Y-m-d H:i:s'),
                     'status' => 'free',
                     $this->usuarioRelacionamentoId() => Auth::id(),
                     'recurrence_rule' => 'WEEKLY'

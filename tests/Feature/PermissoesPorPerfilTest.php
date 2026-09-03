@@ -37,6 +37,7 @@ class PermissoesPorPerfilTest extends TestCase
 
         $slotResponse = $this->actingAs($usuarioProfissional)->postJson('/slots', [
             'start' => '2026-09-03 14:00:00',
+            'end' => '2026-09-03 15:00:00',
         ]);
 
         $slotResponse->assertOk();
@@ -73,6 +74,7 @@ class PermissoesPorPerfilTest extends TestCase
         $this->actingAs($usuarioPaciente)->get('/usuarios')->assertForbidden();
         $this->actingAs($usuarioPaciente)->postJson('/slots', [
             'start' => '2026-09-03 14:00:00',
+            'end' => '2026-09-03 15:00:00',
         ])->assertForbidden();
     }
 }

@@ -100,10 +100,21 @@
                         <div id="slotModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
                             <div class="bg-white rounded-lg w-full max-w-md p-6 relative z-50">
                                 <h3 class="text-lg font-semibold mb-2">Criar horário livre</h3>
+                                <div id="slot_error" class="text-red-600 mb-2"></div>
                                 <form id="slot_form">
-                                    <div class="mb-3">
-                                        <label class="block text-sm">Início</label>
-                                        <input id="slot_start" type="datetime-local" class="w-full border rounded p-2" required>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div>
+                                            <label class="block text-sm">Data</label>
+                                            <input id="slot_date" type="date" class="w-full border rounded p-2" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm">Início</label>
+                                            <input id="slot_start_time" type="time" class="w-full border rounded p-2" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm">Fim</label>
+                                            <input id="slot_end_time" type="time" class="w-full border rounded p-2" required>
+                                        </div>
                                     </div>
                                     <div class="mb-3">
                                         <label class="block text-sm">Repetir semanalmente até</label>
