@@ -103,7 +103,31 @@ class SolicitacaoController extends Controller
 
     protected function profissionalPadraoId(): ?int
     {
-        return Profissional::query()->where('status', 'ativo')->value('id');
+        return Profissional::query()->where('status', 'ativo')->value('id')
+            ?? Profissional::query()->value('id');
+    }
+
+    protected function slotUsuarioColumn(): string
+    {
+        return Schema::hasColumn('slots', 'usuario_id') ? 'usuario_id' : 'user_id';
+    }
+
+    protected function profissionalIdParaSlot(Slot $slot): ?int
+    {
+        $usuarioId = $slot->getAttribute($this->slotUsuarioColumn());
+
+        if ($usuarioId !== null) {
+            $profissionalId = Profissional::query()
+                ->where('usuario_id', $usuarioId)
+                ->where('status', 'ativo')
+                ->value('id');
+
+            if ($profissionalId !== null) {
+                return (int) $profissionalId;
+            }
+        }
+
+        return $this->profissionalPadraoId();
     }
 
     public function create()
@@ -126,10 +150,16 @@ class SolicitacaoController extends Controller
         $availableSlot = Slot::where('status', 'free')
             ->where('start', '<=', $scheduled)
             ->where('end', '>=', $scheduled->copy()->addHour())
-            ->exists();
+            ->orderBy('start')
+            ->first();
 
-        if (!$availableSlot) {
+        if (!$availableSlot instanceof Slot) {
             return back()->withInput()->withErrors(['scheduled_at' => 'Selecione um horário disponível no calendário.']);
+        }
+
+        $profissionalId = $this->profissionalIdParaSlot($availableSlot);
+        if ($profissionalId === null) {
+            return back()->withInput()->withErrors(['scheduled_at' => 'No momento, não há profissional disponível para este horário.']);
         }
 
         // Check if slot is free (exact timestamp)
@@ -153,7 +183,7 @@ class SolicitacaoController extends Controller
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via formulário público',
-            profissionalId: $this->profissionalPadraoId(),
+            profissionalId: $profissionalId,
         ));
 
         return view('solicitar_success', ['agendamento' => $ag, 'paciente' => $paciente]);
@@ -227,13 +257,28 @@ class SolicitacaoController extends Controller
             return response()->json(['error' => 'Horário ocupado'], 422);
         }
 
+        $availableSlot = Slot::where('status', 'free')
+            ->where('start', '<=', $scheduled)
+            ->where('end', '>=', $scheduled->copy()->addHour())
+            ->orderBy('start')
+            ->first();
+
+        if (!$availableSlot instanceof Slot) {
+            return response()->json(['error' => 'Selecione um horário disponível no calendário.'], 422);
+        }
+
+        $profissionalId = $this->profissionalIdParaSlot($availableSlot);
+        if ($profissionalId === null) {
+            return response()->json(['error' => 'No momento, não há profissional disponível para este horário.'], 422);
+        }
+
         $ag = Agendamento::create(Agendamento::makeSchedulingPayload(
             pacienteId: $paciente->id,
             inicio: $scheduled,
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via calendar',
-            profissionalId: $this->profissionalPadraoId(),
+            profissionalId: $profissionalId,
         ));
 
         return response()->json(['success' => true, 'event' => $ag]);

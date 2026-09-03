@@ -100,4 +100,31 @@ class SolicitacaoPacienteSchemaTest extends TestCase
             'status' => 'solicitado',
         ]);
     }
+
+    public function test_solicitacao_retorna_erro_amigavel_quando_nao_ha_profissional(): void
+    {
+        $usuarioPaciente = Usuario::factory()->create([
+            'perfil' => 'paciente',
+            'status' => 'ativo',
+        ]);
+
+        Slot::create([
+            'start' => '2026-09-12 14:00:00',
+            'end' => '2026-09-12 15:00:00',
+            'status' => 'free',
+            'usuario_id' => null,
+        ]);
+
+        $response = $this->actingAs($usuarioPaciente)
+            ->from('/dashboard')
+            ->post('/solicitar', [
+                'name' => 'Paciente Sem Profissional',
+                'phone' => '(11) 90000-0000',
+                'scheduled_at' => '2026-09-12T14:00',
+            ]);
+
+        $response->assertRedirect('/dashboard');
+        $response->assertSessionHasErrors(['scheduled_at']);
+        $this->assertDatabaseCount('agendamentos', 0);
+    }
 }
