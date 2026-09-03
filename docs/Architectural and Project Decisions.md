@@ -167,6 +167,69 @@ Componentes afetados: configuração de ambiente do Laravel, execução de migra
 
 ---
 
+# ADR-004 — Experiência e permissões orientadas por perfil
+
+**Status:** aceita
+
+**Data:** 2026-09-03
+
+## Contexto
+
+O sistema possui três perfis principais (`admin`, `profissional`, `paciente`) e até então compartilhava a mesma área autenticada, sem separar claramente as ações e a experiência de cada um.
+
+## Problema
+
+Era necessário restringir o acesso às funcionalidades conforme o perfil e refletir isso no dashboard e no calendário, em especial para permitir que o doutor gerencie horários livres e confirme solicitações de sessão.
+
+## Alternativas consideradas
+
+### Alternativa A
+
+Manter uma única interface para todos os perfis e esconder ações apenas no front-end.
+
+### Alternativa B
+
+Separar o comportamento por perfil no dashboard, nos controllers e no payload do calendário.
+
+## Decisão
+
+Foi adotada a separação por perfil:
+
+- `admin` gerencia usuários;
+- `profissional` visualiza agenda, adiciona horários livres e confirma sessões solicitadas;
+- `paciente` visualiza histórico de sessões, recibos, anotações e o formulário de solicitação.
+
+No calendário do profissional:
+
+- horários livres são verdes;
+- solicitações pendentes são amarelas;
+- sessões confirmadas são azuis;
+- horários indisponíveis continuam não selecionáveis.
+
+## Justificativa
+
+A regra atende o fluxo operacional da clínica e reduz o risco de acesso indevido a dados e ações internas, especialmente para o perfil de paciente.
+
+## Consequências
+
+### Benefícios
+
+- experiência mais coerente por papel;
+- menor exposição de áreas internas ao paciente;
+- confirmação operacional centralizada no profissional.
+
+### Custos / riscos
+
+- aumenta o número de regras de autorização espalhadas pelos controllers;
+- exige cobertura de testes para cada perfil;
+- ainda requer refinamentos em telas legadas fora do dashboard principal.
+
+## Impacto
+
+Componentes afetados: `DashboardController`, `UsuarioController`, `AgendamentoController`, `SlotController`, `PacienteController`, `ProntuarioController`, `SolicitacaoController`, `resources/views/dashboard.blade.php`, `resources/js/calendar.js`, navegação autenticada e testes de feature.
+
+---
+
 ## Status possíveis
 
 - `proposta`

@@ -12,6 +12,9 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 - fallback de hospedagem com a raiz do projeto como document root, usando `index.php` e `.htaccess` para encaminhar assets para `public/` sem expor esse prefixo na URL;
 - autenticação e schema principal consolidados sobre a tabela `usuarios`, com remoção da criação da tabela legada `users` em instalações novas;
+- tabela `slots` disponível no schema ativo para sustentar o calendário administrativo e a criação de horários livres;
+- dashboard e permissões diferenciados por perfil (`admin`, `profissional`, `paciente`);
+- confirmação de sessões solicitadas pelo profissional diretamente no calendário, com codificação visual por status;
 - modelos e migrations para `Paciente`, `Prontuario`, `Agendamento` e `Slot`;
 - rotas públicas e protegidas para cadastro de pacientes, agendamentos e prontuários;
 - formulário público de solicitação de sessão em `resources/views/solicitar.blade.php`;
@@ -29,6 +32,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - verificação das regras de conflito de horários em agendamento e slots;
 - confirmação do comportamento end-to-end da criação de solicitações públicas.
 - redução das consultas fixas em `scheduled_at` para concentrar a compatibilidade de esquema no modelo `Agendamento`.
+- refinamento das telas legadas fora do dashboard para refletirem integralmente o novo modelo de perfis e nomenclatura em português.
 
 ---
 
@@ -87,6 +91,9 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 
 ## Últimas alterações importantes
 
+- 2026-09-03 — implementada a separação do dashboard por perfil: administrador gerencia usuários, doutor gerencia agenda e confirma sessões, paciente vê histórico, recibos e anotações;
+- 2026-09-03 — calendário do profissional passou a diferenciar sessões solicitadas em amarelo e confirmadas em azul, mantendo horários livres em verde e horários indisponíveis não selecionáveis;
+- 2026-09-03 — corrigido o erro de criação de horários livres com a adição da tabela `slots` ao schema ativo; criação autenticada de slot validada por teste de feature e verificação da tabela no banco configurado;
 - 2026-09-03 — removida a tabela legada `users` do schema ativo; instalações novas passam a criar apenas `usuarios`, e uma migration adicional remove `users` de bases existentes;
 - 2026-09-03 — o processo de autenticação foi explicitamente configurado para usar o provider `usuarios` e o modelo `Usuario`; login, logout e reset de senha foram validados com a suíte de autenticação no container PHP;
 - 2026-09-03 — removidas referências ativas de aplicação a `User`/`users` em prontuários e slots; o código passou a usar `Usuario` como modelo de domínio e autenticação nesses pontos;

@@ -10,6 +10,72 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Separação de experiência e permissões por perfil no sistema.
+
+### Alterações
+
+- criado `DashboardController` para montar o conteúdo específico de `admin`, `profissional` e `paciente`;
+- adicionada gestão básica de usuários para o administrador com `UsuarioController` e views dedicadas;
+- `SlotController`, `AgendamentoController`, `PacienteController` e `ProntuarioController` passaram a restringir ações internas por perfil;
+- o profissional passou a confirmar sessões pelo endpoint `PATCH /agendamentos/{agendamento}/confirmar`;
+- o calendário passou a marcar solicitações pendentes em amarelo, sessões confirmadas em azul e horários livres em verde;
+- a navegação autenticada passou a exibir o link de solicitação pública apenas para o paciente.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/PermissoesPorPerfilTest.php tests/Feature/DashboardPorPerfilTest.php tests/Feature/SlotCreationTest.php --no-ansi` aprovou 6 testes e 20 asserções.
+
+### Pendência
+
+- ainda falta revisar outras telas legadas para alinhar completamente terminologia e restrições fora do fluxo principal do dashboard.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Correção do erro ao criar horário livre via fluxo de slots.
+
+### Diagnóstico
+
+- o controller `SlotController` e o front-end do calendário utilizavam a tabela `slots`, mas o schema ativo não a criava;
+- verificação no banco configurado confirmou `Schema::hasTable('slots') === false` antes da correção.
+
+### Alterações
+
+- adicionada a migration ativa `2026_09_03_130000_create_slots_table.php`, com vínculo opcional a `usuarios` por `usuario_id`;
+- criado o teste `tests/Feature/SlotCreationTest.php` para validar a criação autenticada de um horário livre via `POST /slots`.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SlotCreationTest.php --no-ansi` aprovou 1 teste e 4 asserções;
+- `php artisan migrate --force --no-ansi` não encontrou pendências após a inclusão da migration;
+- verificação via `tinker` confirmou `Schema::hasTable('slots') === true` no banco configurado.
+
+## 2026-09-03
+
+**Tarefa:**
+
+Provisionamento direto de usuários no banco remoto para o domínio `psi.cpetersenjr.com`.
+
+### Alterações
+
+- criados ou atualizados diretamente na tabela `usuarios` os registros `admin@psi.cpetersenjr.com`, `paciente@psi.cpetersenjr.com` e `doutor@psi.cpetersenjr.com`;
+- os perfis aplicados foram `admin`, `paciente` e `profissional`, respectivamente;
+- os três registros permaneceram com status `ativo`.
+
+### Validação
+
+- consulta direta no banco confirmou os três e-mails com os perfis esperados;
+- verificação por hash confirmou a senha definida para os três usuários.
+
+### Observação
+
+- a senha foi aplicada no ambiente remoto, mas não foi registrada neste documento.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Execução e verificação das migrations no banco remoto para remover a tabela legada `users`.
 
 ### Resultado

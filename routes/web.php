@@ -1,15 +1,15 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
 
 // Public routes for patient session requests (no auth required)
 Route::get('/solicitar', [\App\Http\Controllers\SolicitacaoController::class, 'create'])->name('solicitar.create');
@@ -26,6 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('pacientes', \App\Http\Controllers\PacienteController::class);
     Route::resource('prontuarios', \App\Http\Controllers\ProntuarioController::class);
     Route::resource('agendamentos', \App\Http\Controllers\AgendamentoController::class);
+    Route::patch('agendamentos/{agendamento}/confirmar', [\App\Http\Controllers\AgendamentoController::class, 'confirmar'])->name('agendamentos.confirmar');
+    Route::resource('usuarios', UsuarioController::class)->only(['index', 'edit', 'update']);
     // Analyst slot management
     Route::resource('slots', \App\Http\Controllers\SlotController::class)->except(['show']);
 });

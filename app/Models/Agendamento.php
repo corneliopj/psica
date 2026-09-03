@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Paciente;
+use App\Models\Profissional;
 
 class Agendamento extends Model
 {
@@ -130,5 +131,10 @@ class Agendamento extends Model
     {
         $fk = Schema::hasColumn('agendamentos', 'paciente_id') ? 'paciente_id' : 'patient_id';
         return $this->belongsTo(Paciente::class, $fk);
+    }
+
+    public function profissional(): BelongsTo
+    {
+        return $this->belongsTo(Profissional::class, 'profissional_id');
     }
 }

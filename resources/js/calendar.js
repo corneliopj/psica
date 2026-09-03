@@ -7,6 +7,8 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 document.addEventListener('DOMContentLoaded', function(){
     const el = document.getElementById('calendar');
     if(!el) return;
+    const perfil = el.dataset.perfil || 'publico';
+    const podeGerenciarSlots = perfil === 'profissional' || perfil === 'admin';
 
     const calendar = new Calendar(el, {
         plugins: [ dayGridPlugin, timeGridPlugin, interactionPlugin ],
@@ -85,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     };
                     out.push(bg);
                     // if on dashboard (analyst), add an interactive event on top to allow occupy/release
-                    if(document.getElementById('addSlotBtn')){
+                    if(podeGerenciarSlots){
                         out.push({
                             id: 'slot-ui-' + s.id,
                             start: s.start,
@@ -106,9 +108,21 @@ document.addEventListener('DOMContentLoaded', function(){
 
     calendar.render();
     // allow clicking interactive slot events to toggle status (dashboard only)
-    if(document.getElementById('addSlotBtn')){
+        if(podeGerenciarSlots){
         calendar.setOption('eventClick', function(info){
             const props = info.event.extendedProps || {};
+            if(props.canConfirm){
+                if(!confirm('Confirmar esta sessão solicitada?')) return;
+                fetch('/agendamentos/' + info.event.id + '/confirmar', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                }).then(async r => {
+                    if(!r.ok){ alert('Erro ao confirmar sessão'); return; }
+                    await r.json();
+                    calendar.refetchEvents();
+                }).catch(() => { alert('Erro de rede'); });
+                return;
+            }
             const slotId = props.slotId;
             if(!slotId) return;
             const current = props.status;
@@ -187,11 +201,11 @@ document.addEventListener('DOMContentLoaded', function(){
     const addSlotBtn = document.getElementById('addSlotBtn');
     const slotModal = document.getElementById('slotModal');
     const slotForm = document.getElementById('slot_form');
-    if(addSlotBtn && slotModal){
+    if(addSlotBtn && slotModal && podeGerenciarSlots){
         addSlotBtn.addEventListener('click', function(){ slotModal.classList.remove('hidden'); });
         document.getElementById('slot_cancel').addEventListener('click', function(){ slotModal.classList.add('hidden'); });
     }
-    if(slotForm){
+    if(slotForm && podeGerenciarSlots){
         slotForm.addEventListener('submit', function(e){
             e.preventDefault();
             const start = document.getElementById('slot_start').value;

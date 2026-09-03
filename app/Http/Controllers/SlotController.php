@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Auth;
 
 class SlotController extends Controller
 {
+    protected function garantirPerfilPermitido(Request $request, array $perfisPermitidos): void
+    {
+        abort_unless(in_array($request->user()?->perfil, $perfisPermitidos, true), 403);
+    }
+
     protected function usuarioRelacionamentoId(): string
     {
         return \Illuminate\Support\Facades\Schema::hasColumn('slots', 'usuario_id') ? 'usuario_id' : 'user_id';
@@ -21,6 +26,7 @@ class SlotController extends Controller
 
     public function store(Request $request)
     {
+        $this->garantirPerfilPermitido($request, ['admin', 'profissional']);
         // authorization handled by middleware for now
         $data = $request->validate([
             'start' => 'required|date',
@@ -66,6 +72,7 @@ class SlotController extends Controller
 
     public function update(Request $request, Slot $slot)
     {
+        $this->garantirPerfilPermitido($request, ['admin', 'profissional']);
         // authorization handled by middleware for now
         $data = $request->validate([
             'status' => 'required|in:free,occupied'
@@ -77,6 +84,7 @@ class SlotController extends Controller
 
     public function destroy(Slot $slot)
     {
+        $this->garantirPerfilPermitido(request(), ['admin', 'profissional']);
         // authorization handled by middleware for now
         $slot->delete();
         return back();

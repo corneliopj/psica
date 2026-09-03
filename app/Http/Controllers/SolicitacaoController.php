@@ -5,11 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Paciente;
 use App\Models\Agendamento;
+use App\Models\Profissional;
 use App\Models\Slot;
 use Carbon\Carbon;
 
 class SolicitacaoController extends Controller
 {
+    protected function profissionalPadraoId(): ?int
+    {
+        return Profissional::query()->where('status', 'ativo')->value('id');
+    }
+
     public function create()
     {
         return view('solicitar');
@@ -64,6 +70,7 @@ class SolicitacaoController extends Controller
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via formulário público',
+            profissionalId: $this->profissionalPadraoId(),
         ));
 
         return view('solicitar_success', ['agendamento' => $ag, 'paciente' => $paciente]);
@@ -75,18 +82,34 @@ class SolicitacaoController extends Controller
         $from = $request->query('start');
         $to = $request->query('end');
 
-        $query = Agendamento::with('paciente')
+        $usuario = $request->user();
+
+        $query = Agendamento::with(['paciente', 'profissional'])
             ->whereBetween(Agendamento::startColumn(), [$from ?? now()->subMonth(), $to ?? now()->addMonth()])
+            ->when($usuario?->perfil === 'profissional', function ($query) use ($usuario) {
+                $profissionalId = Profissional::query()->where('usuario_id', $usuario->id)->value('id');
+                return $query->where('profissional_id', $profissionalId ?? 0);
+            })
+            ->when($usuario?->perfil === 'paciente', function ($query) use ($usuario) {
+                $pacienteId = Paciente::query()->where('usuario_id', $usuario->id)->value('id');
+                return $query->where('paciente_id', $pacienteId ?? 0);
+            })
             ->get();
 
         $events = $query->map(function($a){
+            $status = $a->status;
             return [
                 'id' => $a->id,
                 'title' => $a->paciente?->name ?? 'Paciente',
                 'start' => $a->scheduled_at,
                 'end' => $a->ends_at,
+                'backgroundColor' => $status === 'confirmado' ? '#2563eb' : '#facc15',
+                'borderColor' => $status === 'confirmado' ? '#2563eb' : '#facc15',
+                'textColor' => $status === 'confirmado' ? '#ffffff' : '#111827',
                 'extendedProps' => [
                     'paciente_id' => $a->paciente_id,
+                    'status' => $status,
+                    'canConfirm' => $status === 'solicitado',
                 ],
             ];
         });
@@ -128,6 +151,7 @@ class SolicitacaoController extends Controller
             duracaoMinutos: 60,
             status: 'solicitado',
             observacoes: 'Solicitação via calendar',
+            profissionalId: $this->profissionalPadraoId(),
         ));
 
         return response()->json(['success' => true, 'event' => $ag]);
