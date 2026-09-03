@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PacienteRequest;
 use App\Models\Paciente;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PacienteController extends Controller
@@ -17,7 +18,9 @@ class PacienteController extends Controller
     public function index(): View
     {
         $this->garantirPerfilPermitido();
-        $pacientes = Paciente::orderBy('name')->paginate(20);
+        $pacientesTable = (new Paciente())->getTable();
+        $nomeColumn = Schema::hasColumn($pacientesTable, 'nome') ? 'nome' : 'name';
+        $pacientes = Paciente::orderBy($nomeColumn)->paginate(20);
         return view('pacientes.index', compact('pacientes'));
     }
 
