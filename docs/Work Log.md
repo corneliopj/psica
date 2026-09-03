@@ -10,6 +10,31 @@ O objetivo não é armazenar uma transcrição das conversas, mas preservar info
 
 **Tarefa:**
 
+Correção de erro 500 em produção causado por ausência de `profissional_id` no agendamento de solicitação.
+
+### Diagnóstico
+
+- após publicar a primeira correção, o domínio passou a falhar em outro ponto: insert em `agendamentos` sem `profissional_id`;
+- no domínio, a stacktrace mostrou `profissionalId: $this->profissionalPadraoId()`, com retorno nulo quando não há profissional ativo vinculado.
+
+### Alterações
+
+- `SolicitacaoController` passou a localizar o profissional pelo slot selecionado (mapeando `slots.usuario_id`/`user_id` para `profissionais.usuario_id`);
+- se não houver profissional associado ao slot, aplica fallback para profissional padrão e, em último caso, retorna erro amigável ao usuário em vez de 500;
+- adicionados cenários de teste para garantir que a ausência de profissional não causa exceção de banco.
+
+### Validação
+
+- `docker compose run --rm --no-deps php php artisan test tests/Feature/SolicitacaoPacienteSchemaTest.php --no-ansi` aprovou 3 testes e 14 asserções.
+
+### Observação
+
+- commit publicado em `main` (`44a91312`), porém o domínio `psi.cpetersenjr.com` ainda apresentava stacktrace da versão anterior no momento da validação final, indicando pendência de deploy/aplicação no servidor.
+
+## 2026-09-03
+
+**Tarefa:**
+
 Validação no domínio `psi.cpetersenjr.com` e correção do erro 500 na solicitação por incompatibilidade de colunas de paciente.
 
 ### Diagnóstico
