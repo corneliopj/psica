@@ -1,6 +1,6 @@
 # Current State
 
-**Última atualização:** 2026-09-03
+**Última atualização:** 2026-09-07
 
 ## Estado geral
 
@@ -28,6 +28,15 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - API de criação de agendamento via calendário (`/api/solicitar`).
 - conexão com o MariaDB remoto validada por `docker compose run --rm --no-deps php php artisan migrate:status --no-ansi`;
 - imagem Docker PHP com a extensão `pdo_mysql` para acesso a MySQL/MariaDB.
+- ciclo de estados de agendamento aplicado no serviço (`solicitado -> confirmado/rejeitado -> realizado/cancelado`) com validação de transição;
+- confirmação de agendamento com `DB::transaction` + `lockForUpdate` para evitar double-booking;
+- rejeição/cancelamento exigindo `observacoes_cancelamento` e liberação automática do slot;
+- captura de `valor_sessao` na criação/confirmação de agendamento;
+- prontuário com criptografia de `anotacoes` e `historico_clinico`, além de mecanismo de selamento (`selado`, `data_selamento`, `hash_integridade`);
+- bloqueio de alteração e remoção de prontuário selado por exceção de domínio;
+- criação automática de fatura em confirmação/realização de sessão;
+- registro de pagamento em faturas (`forma_pagamento`, `transacao_id`, `pago_em`) e emissão de recibo fiscal com hash SHA-256;
+- geração de arquivo de recibo em PDF quando DomPDF estiver instalado no runtime (com fallback de arquivo para ambientes sem a dependência).
 
 ---
 
@@ -40,6 +49,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - refinamento das telas legadas fora do dashboard para refletirem integralmente o novo modelo de perfis e nomenclatura em português.
 - deploy da correção de compatibilidade de `Paciente` no fluxo `/solicitar` para o domínio `psi.cpetersenjr.com`.
 - deploy da correção para evitar criação de agendamento sem `profissional_id` no fluxo `/solicitar`.
+- instalação de `barryvdh/laravel-dompdf` em ambientes onde o binário PHP/Composer esteja saudável.
 
 ---
 
@@ -59,6 +69,7 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - ainda existe uma migration histórica desativada em `database/migrations/disabled/` com referência a `users`, mas ela não participa do schema ativo;
 - alguns arquivos continuam em template genérico do Laravel em vez de documentação específica do projeto;
 - o ambiente de dados foi definido como MariaDB remoto em infraestrutura externa, o que exige configuração explícita do `.env` e revisão de conexão em todo o ambiente de execução.
+- o dev container atual não consegue executar `composer` localmente por incompatibilidade de OpenSSL no binário PHP host, impedindo atualizar dependências direto neste ambiente.
 
 ---
 
@@ -117,6 +128,8 @@ O projeto está estruturado como uma aplicação Laravel de gestão de clínica 
 - 2026-09-03 — removidas referências ativas de aplicação a `User`/`users` em prontuários e slots; o código passou a usar `Usuario` como modelo de domínio e autenticação nesses pontos;
 - 2026-09-03 — centralizada a compatibilidade de colunas de agendamento no modelo `Agendamento`; controllers e dashboard deixaram de depender diretamente de `scheduled_at` para leitura e escrita no esquema atual;
 - 2026-09-03 — adicionado teste unitário `tests/Unit/AgendamentoCompatibilityTest.php` e validado com 3 testes e 18 asserções no container PHP;
+- 2026-09-07 — implementados novos módulos de agendamento transacional, prontuário selável e financeiro (faturas/pagamentos/recibos), incluindo migrations para `valor_sessao`, selamento de prontuário e tabela `recibos`;
+- 2026-09-07 — adicionados os testes `AgendamentoLifecycleFinanceiroTest` e `ProntuarioSelamentoTest`, com validação conjunta de 12 testes e 50 asserções no container PHP;
 - 2026-09-02 — erro HTTP 500 no servidor Plesk considerado resolvido após desaparecer em produção; causa raiz não confirmada;
 - 2026-09-02 — adicionada imagem PHP Docker com `pdo_mysql`; o ambiente passou a selecionar o driver `mariadb`, e o `.env` deixou de ser rastreado pelo Git;
 - 2026-09-02 — corrigida a listagem de prontuários para carregar a relação Eloquent `paciente`, em vez da relação inexistente `patient`;

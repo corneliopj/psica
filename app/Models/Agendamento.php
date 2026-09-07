@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Schema;
 use App\Models\Paciente;
 use App\Models\Profissional;
@@ -18,12 +19,6 @@ class Agendamento extends Model
         'ends_at',
     ];
 
-    protected $casts = [
-        'scheduled_at' => 'datetime',
-        'data_hora_inicio' => 'datetime',
-        'data_hora_fim' => 'datetime',
-    ];
-
     protected $fillable = [
         'profissional_id',
         'paciente_id',
@@ -32,8 +27,16 @@ class Agendamento extends Model
         'scheduled_at',
         'duration_minutes',
         'status',
+        'valor_sessao',
         'notes',
         'observacoes_cancelamento',
+    ];
+
+    protected $casts = [
+        'scheduled_at' => 'datetime',
+        'data_hora_inicio' => 'datetime',
+        'data_hora_fim' => 'datetime',
+        'valor_sessao' => 'decimal:2',
     ];
 
     public static function startColumn(): string
@@ -58,6 +61,7 @@ class Agendamento extends Model
         string $status = 'solicitado',
         ?string $observacoes = null,
         ?int $profissionalId = null,
+        ?float $valorSessao = null,
     ): array {
         if (self::usesLegacySchedule()) {
             return array_filter([
@@ -66,6 +70,7 @@ class Agendamento extends Model
                 'scheduled_at' => $inicio->toDateTimeString(),
                 'duration_minutes' => $duracaoMinutos,
                 'status' => $status === 'solicitado' ? 'scheduled' : $status,
+                'valor_sessao' => $valorSessao,
                 'notes' => $observacoes,
             ], static fn ($value) => $value !== null);
         }
@@ -76,6 +81,7 @@ class Agendamento extends Model
             'data_hora_inicio' => $inicio->toDateTimeString(),
             'data_hora_fim' => $inicio->copy()->addMinutes($duracaoMinutos)->toDateTimeString(),
             'status' => $status === 'scheduled' ? 'solicitado' : $status,
+            'valor_sessao' => $valorSessao,
             'observacoes_cancelamento' => $observacoes,
         ], static fn ($value) => $value !== null);
     }
@@ -136,5 +142,10 @@ class Agendamento extends Model
     public function profissional(): BelongsTo
     {
         return $this->belongsTo(Profissional::class, 'profissional_id');
+    }
+
+    public function fatura(): HasOne
+    {
+        return $this->hasOne(Fatura::class, 'agendamento_id');
     }
 }

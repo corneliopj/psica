@@ -278,6 +278,40 @@ Remoção da tabela legada `users` do projeto.
 
 - permanece apenas uma referência histórica a `users` em migration desativada dentro de `database/migrations/disabled/`, sem efeito no runtime.
 
+## 2026-09-07
+
+**Tarefa:**
+
+Implementação dos módulos de agendamento/sessões, prontuário selável e financeiro com emissão de recibo.
+
+### Alterações
+
+- adicionado `valor_sessao` em `agendamentos` e novo fluxo de transição no `AgendamentoService` com `DB::transaction` + `lockForUpdate` para confirmar sessão sem duplicidade de horário;
+- confirmação passou a marcar slot como `occupied`; rejeição/cancelamento exigem motivo e liberam slot para `free`;
+- novo método `realizarAgendamento` incluído no serviço e exposto em rota/controller;
+- prontuário recebeu colunas `selado`, `data_selamento` e `hash_integridade` com bloqueio de update/delete após selamento;
+- `ProntuarioService` passou a suportar registro de diário clínico e método `selarRegistroSessao($prontuarioId)` com hash SHA-256 dos dados da sessão;
+- criados `FaturaService` e `ReciboService` com:
+	- criação automática de fatura ao confirmar/realizar sessão;
+	- `registrarPagamento($faturaId, $formaPagamento, $transacaoId)`;
+	- emissão de recibo apenas para fatura paga, com número sequencial `REC-AAAA-0001`, snapshot fiscal, texto legal e hash de autenticidade SHA-256;
+- criado `ReciboController` com endpoints para pagamento, emissão e download;
+- adicionado template `resources/views/recibos/pdf.blade.php` e tabela `recibos`.
+
+### Migrations adicionadas
+
+- `2026_09_07_100000_add_valor_sessao_to_agendamentos_table.php`
+- `2026_09_07_100100_add_selamento_columns_to_prontuarios_table.php`
+- `2026_09_07_100200_add_financeiro_columns_to_faturas_table.php`
+- `2026_09_07_100300_add_documentos_fiscais_to_profissionais_e_pacientes.php`
+- `2026_09_07_100400_create_recibos_table.php`
+
+### Validação
+
+- executado: `docker compose run --rm --no-deps php php artisan test --filter='AgendamentoLifecycleFinanceiroTest|ProntuarioSelamentoTest|SolicitacaoPacienteSchemaTest|DashboardPorPerfilTest'`;
+- resultado: 12 testes aprovados, 50 asserções;
+- observação: a dependência `barryvdh/laravel-dompdf` foi referenciada no `composer.json`, mas não pôde ser instalada neste ambiente devido à incompatibilidade do binário PHP host com OpenSSL 1.1.1; o serviço usa fallback de arquivo quando a biblioteca não está disponível em runtime.
+
 ## 2026-09-03
 
 **Tarefa:**

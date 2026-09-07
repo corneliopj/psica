@@ -25,10 +25,12 @@ class Paciente extends Model
         'usuario_id',
         'name',
         'nome',
+        'nome_responsavel',
         'email',
         'phone',
         'telefone',
         'cpf',
+        'cpf_responsavel',
         'birth_date',
         'data_nascimento',
         'notes',
@@ -39,6 +41,7 @@ class Paciente extends Model
     protected $casts = [
         'telefone' => 'encrypted',
         'cpf' => 'encrypted',
+        'cpf_responsavel' => 'encrypted',
         'data_nascimento' => 'date',
     ];
 

@@ -25,8 +25,16 @@ Route::middleware('auth')->group(function () {
     // CRUD routes for psica domain (nomes em Português)
     Route::resource('pacientes', \App\Http\Controllers\PacienteController::class);
     Route::resource('prontuarios', \App\Http\Controllers\ProntuarioController::class);
+    Route::patch('prontuarios/{prontuario}/diario', [\App\Http\Controllers\ProntuarioController::class, 'registrarDiario'])->name('prontuarios.diario');
+    Route::patch('prontuarios/{prontuario}/selar', [\App\Http\Controllers\ProntuarioController::class, 'selar'])->name('prontuarios.selar');
     Route::resource('agendamentos', \App\Http\Controllers\AgendamentoController::class);
     Route::patch('agendamentos/{agendamento}/confirmar', [\App\Http\Controllers\AgendamentoController::class, 'confirmar'])->name('agendamentos.confirmar');
+    Route::patch('agendamentos/{agendamento}/rejeitar', [\App\Http\Controllers\AgendamentoController::class, 'rejeitar'])->name('agendamentos.rejeitar');
+    Route::patch('agendamentos/{agendamento}/cancelar', [\App\Http\Controllers\AgendamentoController::class, 'cancelar'])->name('agendamentos.cancelar');
+    Route::patch('agendamentos/{agendamento}/realizar', [\App\Http\Controllers\AgendamentoController::class, 'realizar'])->name('agendamentos.realizar');
+    Route::patch('faturas/{fatura}/pagamento', [\App\Http\Controllers\ReciboController::class, 'registrarPagamento'])->name('faturas.pagamento');
+    Route::post('faturas/{fatura}/recibo', [\App\Http\Controllers\ReciboController::class, 'emitir'])->name('faturas.recibo.emitir');
+    Route::get('recibos/{recibo}/pdf', [\App\Http\Controllers\ReciboController::class, 'pdf'])->name('recibos.pdf');
     Route::resource('usuarios', UsuarioController::class)->only(['index', 'edit', 'update']);
     // Analyst slot management
     Route::resource('slots', \App\Http\Controllers\SlotController::class)->except(['show']);

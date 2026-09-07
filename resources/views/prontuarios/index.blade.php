@@ -9,8 +9,9 @@
     <ul>
         @foreach($prontuarios as $p)
             <li class="border-b py-2">
-                <a href="{{ route('prontuarios.show', $p) }}">{{ $p->title ?? 'Prontuário #' . $p->id }}</a>
-                <div class="text-sm text-gray-600">Paciente: {{ $p->paciente->name ?? '—' }}</div>
+                <a href="{{ route('prontuarios.show', $p) }}">Prontuário #{{ $p->id }}</a>
+                <div class="text-sm text-gray-600">Paciente: {{ $p->paciente->name ?? $p->paciente->nome ?? '—' }}</div>
+                <div class="text-sm text-gray-600">Status: {{ $p->selado ? 'Selado' : 'Aberto' }}</div>
             </li>
         @endforeach
     </ul>

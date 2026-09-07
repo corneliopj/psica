@@ -15,12 +15,14 @@ class Profissional extends Model
         'nome',
         'especialidade',
         'telefone',
+        'cpf_cnpj',
         'status',
         'observacoes',
     ];
 
     protected $casts = [
         'telefone' => 'encrypted',
+        'cpf_cnpj' => 'encrypted',
     ];
 
     public function usuario(): BelongsTo
@@ -36,5 +38,10 @@ class Profissional extends Model
     public function disponibilidades(): HasMany
     {
         return $this->hasMany(Disponibilidade::class, 'profissional_id');
+    }
+
+    public function faturas(): HasMany
+    {
+        return $this->hasMany(Fatura::class, 'profissional_id');
     }
 }

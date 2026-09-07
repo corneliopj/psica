@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Fatura extends Model
 {
@@ -15,12 +16,16 @@ class Fatura extends Model
         'profissional_id',
         'valor',
         'status',
+        'forma_pagamento',
+        'transacao_id',
+        'pago_em',
         'numero_recibo',
         'emitida_em',
     ];
 
     protected $casts = [
         'valor' => 'decimal:2',
+        'pago_em' => 'datetime',
         'emitida_em' => 'datetime',
     ];
 
@@ -37,5 +42,10 @@ class Fatura extends Model
     public function profissional(): BelongsTo
     {
         return $this->belongsTo(Profissional::class, 'profissional_id');
+    }
+
+    public function recibo(): HasOne
+    {
+        return $this->hasOne(Recibo::class, 'fatura_id');
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Schema;
+use LogicException;
 use App\Models\Paciente;
 use App\Models\Usuario;
 
@@ -19,6 +20,9 @@ class Prontuario extends Model
         'anotacoes',
         'historico_clinico',
         'data_registro',
+        'selado',
+        'data_selamento',
+        'hash_integridade',
         'created_by',
     ];
 
@@ -26,7 +30,24 @@ class Prontuario extends Model
         'anotacoes' => 'encrypted',
         'historico_clinico' => 'encrypted',
         'data_registro' => 'datetime',
+        'data_selamento' => 'datetime',
+        'selado' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (Prontuario $prontuario) {
+            if ($prontuario->getOriginal('selado')) {
+                throw new LogicException('Prontuário selado não pode ser alterado.');
+            }
+        });
+
+        static::deleting(function (Prontuario $prontuario) {
+            if ($prontuario->selado) {
+                throw new LogicException('Prontuário selado não pode ser removido.');
+            }
+        });
+    }
 
     public function paciente(): BelongsTo
     {

@@ -241,6 +241,64 @@ Componentes afetados: `DashboardController`, `UsuarioController`, `AgendamentoCo
 ## Regra
 
 Uma decisão substituída não deve ser simplesmente apagada. Registre a nova decisão e indique qual decisão anterior ela substitui. Isso preserva a memória arquitetural do projeto.
+
+---
+
+# ADR-005 — Integridade transacional do agendamento, selamento clínico e trilha fiscal
+
+**Status:** aceita
+
+**Data:** 2026-09-07
+
+## Contexto
+
+O sistema precisava evoluir do fluxo básico de solicitação para um ciclo completo de sessão clínica: confirmação/rejeição/cancelamento sem dupla marcação, registro clínico inviolável após fechamento e emissão fiscal rastreável.
+
+## Problema
+
+Sem controle transacional e sem lock pessimista, havia risco de double-booking em confirmações concorrentes. Sem selamento de prontuário, não havia garantia de imutabilidade clínica. Sem trilha financeira acoplada à sessão, a emissão de recibo poderia ocorrer sem pagamento validado.
+
+## Alternativas consideradas
+
+### Alternativa A
+
+Manter validações apenas no controller e gerar recibo manual sem vínculo rígido de fatura.
+
+### Alternativa B
+
+Centralizar regras em serviços de domínio com transações de banco, selamento por hash e emissão fiscal condicionada ao pagamento.
+
+## Decisão
+
+Foi adotada a alternativa B:
+
+- `AgendamentoService` controla transições de estado e usa `DB::transaction` + `lockForUpdate` nas operações críticas;
+- confirmação ocupa slot, rejeição/cancelamento exigem motivo e liberam slot;
+- `ProntuarioService` implementa selamento com `selado`, `data_selamento` e `hash_integridade` SHA-256, bloqueando update/delete após selar;
+- `FaturaService` cria/atualiza fatura automaticamente em confirmação/realização e registra pagamento;
+- `ReciboService` só emite recibo para fatura paga, com número sequencial, snapshot fiscal e hash de autenticidade SHA-256.
+
+## Justificativa
+
+A abordagem reduz risco operacional e jurídico, reforça consistência clínica/fiscal e mantém a regra de negócio concentrada em serviços reutilizáveis.
+
+## Consequências
+
+### Benefícios
+
+- menor risco de conflitos de agenda em alta concorrência;
+- prontuário com trilha de integridade e imutabilidade após fechamento;
+- vínculo explícito entre sessão, cobrança, pagamento e recibo.
+
+### Custos / riscos
+
+- aumento da complexidade de serviços e migrations;
+- necessidade de instalar e manter biblioteca de geração de PDF no runtime;
+- maior superfície de testes de integração entre módulos.
+
+## Impacto
+
+Componentes afetados: `AgendamentoService`, `AgendamentoController`, `ProntuarioService`, `ProntuarioController`, `FaturaService`, `ReciboService`, `ReciboController`, models `Agendamento`/`Prontuario`/`Fatura`/`Recibo`, `routes/web.php`, migrations do dia 2026-09-07 e testes de feature financeiros/clínicos.
 ## Alternativas consideradas
 
 ### Alternativa A
