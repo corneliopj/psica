@@ -6,8 +6,8 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 find_php_bin() {
   local candidates=(
     "${PHP_BIN:-}"
-    "/opt/plesk/php/8.4/bin/php"
     "/opt/plesk/php/8.3/bin/php"
+    "/opt/plesk/php/8.4/bin/php"
     "/opt/plesk/php/8.2/bin/php"
     "/opt/plesk/php/8.1/bin/php"
     "/usr/bin/php"
